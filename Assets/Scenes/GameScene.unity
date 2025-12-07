@@ -1443,7 +1443,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 588908d3d7ee8ec4ea5e476db060690f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playSceneName: PlayScene
+  targetSceneName: 
+  stageIndex: -1
 --- !u!1 &680785877
 GameObject:
   m_ObjectHideFlags: 0
@@ -2151,6 +2152,7 @@ GameObject:
   - component: {fileID: 824879842}
   - component: {fileID: 824879838}
   - component: {fileID: 824879841}
+  - component: {fileID: 824879847}
   - component: {fileID: 824879840}
   - component: {fileID: 824879839}
   m_Layer: 0
@@ -2379,6 +2381,23 @@ MonoBehaviour:
   affectDirection: 1
   clampZToZero: 0
   verboseLog: 0
+--- !u!114 &824879847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824879837}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7aa18e8788a6814fb9541853c6e7cf0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attackManager: {fileID: 824879838}
+  playerHP: {fileID: 824879841}
+  touchMove: {fileID: 824879842}
+  spriteRenderer: {fileID: 0}
+  characterIndex: 1
 --- !u!1 &849596276
 GameObject:
   m_ObjectHideFlags: 0
@@ -3090,7 +3109,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 588908d3d7ee8ec4ea5e476db060690f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playSceneName: PlayScene
+  targetSceneName: 
+  stageIndex: -1
 --- !u!4 &1303121882
 Transform:
   m_ObjectHideFlags: 0

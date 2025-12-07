@@ -14,6 +14,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/StartScene.unity
     guid: a2b2c28365d102948be733690b3211f3
+  - enabled: 1
+    path: Assets/Scenes/GatyaScene.unity
+    guid: 08e9b0bf7cdd5944485f8d65b0d32219
+  - enabled: 1
+    path: Assets/Scenes/ShopScene.unity
+    guid: 54630f77481ce2a40989e116ca6b50c6
+  - enabled: 1
+    path: Assets/Scenes/CharacterScene.unity
+    guid: 32138a1b29c55e04ab265d83b4562d8e
   m_configObjects:
     com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: f662a040f83fa564db5361351ba74bf3, type: 2}
     com.unity.adaptiveperformance.samsung.android.provider_settings: {fileID: 11400000, guid: dcf25382baa5f6840b3b3321dd341b13, type: 2}
