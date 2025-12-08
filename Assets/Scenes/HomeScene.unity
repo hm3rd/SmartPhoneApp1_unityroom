@@ -661,6 +661,8 @@ GameObject:
   - component: {fileID: 200037846}
   - component: {fileID: 200037845}
   - component: {fileID: 200037844}
+  - component: {fileID: 200037848}
+  - component: {fileID: 200037847}
   m_Layer: 5
   m_Name: Start
   m_TagString: Untagged
@@ -731,7 +733,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 200037845}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 200037848}
+        m_TargetAssemblyTypeName: StageSelectionManager, Assembly-CSharp
+        m_MethodName: OnPreparationComplete
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &200037845
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -770,6 +784,34 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 200037842}
   m_CullTransparentMesh: 1
+--- !u!114 &200037847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 200037842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 588908d3d7ee8ec4ea5e476db060690f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetSceneName: GameScene
+  stageIndex: -1
+--- !u!114 &200037848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 200037842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35fc867486d81724d90ef38be1a049bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  preparationPanel: {fileID: 722215988}
+  selectedStageIndex: -1
 --- !u!1 &203363282
 GameObject:
   m_ObjectHideFlags: 0
@@ -1326,13 +1368,13 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 319615513}
-        m_TargetAssemblyTypeName: LoadScene, Assembly-CSharp
-        m_MethodName: LoadTargetScene
-        m_Mode: 1
+        m_TargetAssemblyTypeName: StageSelectManager, Assembly-CSharp
+        m_MethodName: SelectStage
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 2
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -1384,11 +1426,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 319615508}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 588908d3d7ee8ec4ea5e476db060690f, type: 3}
+  m_Script: {fileID: 11500000, guid: 9fe94ae795b2c664a949bbd14153ecb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetSceneName: GameScene
-  stageIndex: 2
+  preparationPanel: {fileID: 722215988}
+  readyButton: {fileID: 200037844}
+  stageInfoText: {fileID: 0}
 --- !u!1 &339468657
 GameObject:
   m_ObjectHideFlags: 0
@@ -1528,7 +1571,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &368004220
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2257,8 +2300,9 @@ GameObject:
   - component: {fileID: 722215991}
   - component: {fileID: 722215990}
   - component: {fileID: 722215989}
+  - component: {fileID: 722215992}
   m_Layer: 5
-  m_Name: BeforeStagePrepare
+  m_Name: StagePreparePanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2325,6 +2369,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &722215992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 722215988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c623614038112ef42839152e9f50e5b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  readyButton: {fileID: 200037844}
+  cancelButton: {fileID: 0}
+  stageSelectionUI: {fileID: 0}
 --- !u!1 &830796119
 GameObject:
   m_ObjectHideFlags: 0
@@ -2726,6 +2785,7 @@ GameObject:
   - component: {fileID: 1021397984}
   - component: {fileID: 1021397983}
   - component: {fileID: 1021397982}
+  - component: {fileID: 1021397986}
   m_Layer: 5
   m_Name: UICanvas
   m_TagString: Untagged
@@ -2825,6 +2885,25 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 960, y: 540}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1021397986
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1021397981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f4029fc59233074888f278664b8a86f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stagePreparePanel: {fileID: 722215988}
+  selectedStageNameText: {fileID: 0}
+  stageDescriptionText: {fileID: 0}
+  stage1Button: {fileID: 1644608933}
+  stage2Button: {fileID: 2088241411}
+  stage3Button: {fileID: 319615510}
+  selectedStageIndex: -1
 --- !u!1 &1068958226
 GameObject:
   m_ObjectHideFlags: 0
@@ -3010,6 +3089,7 @@ Transform:
   m_Children:
   - {fileID: 2063110912}
   - {fileID: 852444998}
+  - {fileID: 1894534622}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1218513130
@@ -3024,13 +3104,14 @@ GameObject:
   - component: {fileID: 1218513134}
   - component: {fileID: 1218513133}
   - component: {fileID: 1218513132}
+  - component: {fileID: 1218513135}
   m_Layer: 5
   m_Name: Back
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1218513131
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3095,7 +3176,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1218513135}
         m_TargetAssemblyTypeName: PanelManager, Assembly-CSharp
         m_MethodName: ClosePanel
         m_Mode: 1
@@ -3145,6 +3226,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1218513130}
   m_CullTransparentMesh: 1
+--- !u!114 &1218513135
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1218513130}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa0cb77c8e9890246950fe4eadb6f6ba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetPanel: {fileID: 722215988}
 --- !u!1 &1262625695
 GameObject:
   m_ObjectHideFlags: 0
@@ -3493,6 +3587,7 @@ GameObject:
   - component: {fileID: 1644608935}
   - component: {fileID: 1644608934}
   - component: {fileID: 1644608933}
+  - component: {fileID: 1644608937}
   - component: {fileID: 1644608936}
   m_Layer: 5
   m_Name: Stage1
@@ -3565,10 +3660,10 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1644608936}
-        m_TargetAssemblyTypeName: LoadScene, Assembly-CSharp
-        m_MethodName: LoadTargetScene
-        m_Mode: 1
+      - m_Target: {fileID: 1644608937}
+        m_TargetAssemblyTypeName: StageSelectManager, Assembly-CSharp
+        m_MethodName: SelectStage
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -3624,11 +3719,26 @@ MonoBehaviour:
   m_GameObject: {fileID: 1644608931}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 588908d3d7ee8ec4ea5e476db060690f, type: 3}
+  m_Script: {fileID: 11500000, guid: 7c31a242202228f4b9b4a64fb92a20ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetSceneName: GameScene
   stageIndex: 0
+  stageNumberDisplay: {fileID: 0}
+--- !u!114 &1644608937
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1644608931}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fe94ae795b2c664a949bbd14153ecb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  preparationPanel: {fileID: 722215988}
+  readyButton: {fileID: 200037844}
+  stageInfoText: {fileID: 0}
 --- !u!1 &1680767662
 GameObject:
   m_ObjectHideFlags: 0
@@ -4394,6 +4504,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1877709798}
   m_CullTransparentMesh: 1
+--- !u!1 &1894534621
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1894534622}
+  - component: {fileID: 1894534623}
+  m_Layer: 0
+  m_Name: StagePrepareManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1894534622
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1894534621}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1144295761}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1894534623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1894534621}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa0cb77c8e9890246950fe4eadb6f6ba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetPanel: {fileID: 722215988}
 --- !u!1 &1909255451
 GameObject:
   m_ObjectHideFlags: 0
@@ -4876,13 +5031,13 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2088241414}
-        m_TargetAssemblyTypeName: LoadScene, Assembly-CSharp
-        m_MethodName: LoadTargetScene
-        m_Mode: 1
+        m_TargetAssemblyTypeName: StageSelectManager, Assembly-CSharp
+        m_MethodName: SelectStage
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 1
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -4934,11 +5089,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 2088241409}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 588908d3d7ee8ec4ea5e476db060690f, type: 3}
+  m_Script: {fileID: 11500000, guid: 9fe94ae795b2c664a949bbd14153ecb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetSceneName: GameScene
-  stageIndex: 1
+  preparationPanel: {fileID: 722215988}
+  readyButton: {fileID: 200037844}
+  stageInfoText: {fileID: 0}
 --- !u!1 &2114478036
 GameObject:
   m_ObjectHideFlags: 0

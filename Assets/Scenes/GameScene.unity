@@ -1443,7 +1443,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 588908d3d7ee8ec4ea5e476db060690f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetSceneName: 
+  targetSceneName: HomeScene
   stageIndex: -1
 --- !u!1 &680785877
 GameObject:
@@ -3096,7 +3096,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1303121881
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4631,8 +4631,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 624286141}
-        m_TargetAssemblyTypeName: StartScene, Assembly-CSharp
-        m_MethodName: GoToHomeScene
+        m_TargetAssemblyTypeName: LoadScene, Assembly-CSharp
+        m_MethodName: LoadTargetScene
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
