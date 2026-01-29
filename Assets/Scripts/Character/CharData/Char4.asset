@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7d0c161ea237b904ebe52fef2169dd77, type: 3}
-  m_Name: Char1
+  m_Name: Char4
   m_EditorClassIdentifier: 
-  characterId: 1
-  characterName: "\u6D25\u7530\u8D8A\u524D\u5B88\u52A9\u5EE3"
-  description: "\u3064\u30FC\u3061\u3083\u3093\u3067\u3059"
-  characterSprite: {fileID: -1088588298251838489, guid: b37fc0e228fa6914d88c6c84fdc0a070, type: 3}
+  characterId: 4
+  characterName: eri
+  description: 
+  characterSprite: {fileID: -7772085641249247999, guid: c12229da1893fed49b951af9bd70cc81, type: 3}
   maxHP: 100
   moveSpeed: 5
   availableAttacks:

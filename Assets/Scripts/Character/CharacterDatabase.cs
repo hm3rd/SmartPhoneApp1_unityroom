@@ -49,6 +49,23 @@ public class CharacterDatabase : MonoBehaviour
     }
     
     /// <summary>
+    /// キャラクターIDで検索
+    /// </summary>
+    public CharacterData GetCharacterById(int id)
+    {
+        return characters.Find(c => c.characterId == id);
+    }
+    
+    /// <summary>
+    /// キャラクターIDからアイコンを取得
+    /// </summary>
+    public Sprite GetCharacterIconById(int id)
+    {
+        CharacterData character = GetCharacterById(id);
+        return character?.characterIcon;
+    }
+    
+    /// <summary>
     /// 全キャラクター数を取得
     /// </summary>
     public int GetCharacterCount()

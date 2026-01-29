@@ -9,8 +9,11 @@ using System.Collections;
 public class AttackButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
     [Header("攻撃設定")]
-    [Tooltip("実行する攻撃データ")]
+    [Tooltip("実行する攻撃データ（キャラ固有でない場合のみ使用）")]
     public AttackData attackData;
+    
+    [Tooltip("攻撃のインデックス（availableAttacks内の位置、-1なら使用しない）")]
+    public int attackIndex = -1;
     
     [Tooltip("AttackManagerの参照（未設定の場合は自動検索）")]
     public AttackManager attackManager;
@@ -37,25 +40,38 @@ public class AttackButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     /// </summary>
     public void OnAttackButtonPressed()
     {
-        if (attackManager == null || attackData == null)
+        if (attackManager == null)
         {
-            Debug.LogWarning("AttackManagerまたはAttackDataが設定されていません");
+            Debug.LogWarning("AttackManagerが設定されていません");
+            return;
+        }
+
+        // attackIndex が設定されている場合、そこから attackData を取得（キャラ交代で自動更新される）
+        AttackData dataToUse = attackData;
+        if (attackIndex >= 0 && attackIndex < attackManager.availableAttacks.Count)
+        {
+            dataToUse = attackManager.availableAttacks[attackIndex];
+        }
+
+        if (dataToUse == null)
+        {
+            Debug.LogWarning("攻撃データが設定されていません");
             return;
         }
         
         // データ型に応じて処理分岐
-        if (attackData is MultiHitAttackData multi)
+        if (dataToUse is MultiHitAttackData multi)
         {
             StartCoroutine(ExecuteMultiHit(multi));
         }
-        else if (attackData is ChargeAttackData)
+        else if (dataToUse is ChargeAttackData)
         {
             // チャージはボタン押し/離しで制御するため、OnClickでは何もしない
         }
         else
         {
             // 通常攻撃はAttackManagerに委譲
-            attackManager.ExecuteAttack(attackData);
+            attackManager.ExecuteAttack(dataToUse);
         }
     }
     

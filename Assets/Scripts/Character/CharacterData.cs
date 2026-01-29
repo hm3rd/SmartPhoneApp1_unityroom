@@ -8,6 +8,9 @@ using System.Collections.Generic;
 public class CharacterData : ScriptableObject
 {
     [Header("基本情報")]
+    [Tooltip("キャラクターID（ユニークな識別子）")]
+    public int characterId = 0;
+    
     [Tooltip("キャラクター名")]
     public string characterName = "新しいキャラクター";
     
@@ -17,6 +20,9 @@ public class CharacterData : ScriptableObject
     
     [Tooltip("キャラクターのアイコン/スプライト")]
     public Sprite characterSprite;
+    
+    // characterIconとして使用するプロパティ
+    public Sprite characterIcon => characterSprite;
     
     [Header("ステータス")]
     [Tooltip("最大HP")]

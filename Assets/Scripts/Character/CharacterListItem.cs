@@ -22,6 +22,10 @@ public class CharacterListItem : MonoBehaviour
     
     [Tooltip("選択ボタン")]
     public Button selectButton;
+
+    [Header("遷移設定")]
+    [Tooltip("選択後に戻るシーン名。未設定ならPlayerPrefsのReturnSceneName、なければHomeScene。")]
+    public string returnSceneName = "HomeScene";
     
     private CharacterData characterData;
     
@@ -81,6 +85,19 @@ public class CharacterListItem : MonoBehaviour
         if (characterData == null) return;
         
         Debug.Log($"キャラクター '{characterData.characterName}' が選択されました");
-        // ここに選択時の処理を追加（次のステップで実装）
+        
+        // PlayerPrefsに選択されたキャラクター情報を保存
+        PlayerPrefs.SetInt("TempSelectedCharacterId", characterData.characterId);
+        PlayerPrefs.SetString("TempSelectedCharacterName", characterData.characterName);
+        PlayerPrefs.Save();
+        
+        // 戻り先シーンを決定
+        string targetScene = PlayerPrefs.GetString("ReturnSceneName", returnSceneName);
+        if (string.IsNullOrEmpty(targetScene))
+        {
+            targetScene = returnSceneName;
+        }
+
+        UnityEngine.SceneManagement.SceneManager.LoadScene(targetScene);
     }
 }

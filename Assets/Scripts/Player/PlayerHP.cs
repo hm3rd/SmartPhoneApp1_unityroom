@@ -3,44 +3,45 @@ using UnityEngine.UI;
 
 public class PlayerHP : MonoBehaviour
 {
-    public int maxHP = 100;
-    public int currentHP = 100;
-    public Slider hpBar;
-
+    [SerializeField] private GameCharacterManager gameCharacterManager;
     public float invincibleTime = 1.0f; // 無敵時間（秒）
     private float lastDamageTime = -10f; // 最後にダメージを受けた時刻
 
     void Start()
     {
-        UpdateHPBar();
+        // GameCharacterManager の自動検索
+        if (gameCharacterManager == null)
+        {
+            gameCharacterManager = FindObjectOfType<GameCharacterManager>();
+            if (gameCharacterManager == null)
+            {
+                enabled = false;
+                return;
+            }
+        }
     }
 
     // HPが変化したときに呼ぶ
     public void TakeDamage(int damage)
     {
-        currentHP -= damage;
-        if (currentHP < 0) currentHP = 0;
-        UpdateHPBar();
-
-        if (currentHP == 0)
+        if (gameCharacterManager == null)
         {
-            GameOver();
+            return;
         }
+
+        // GameCharacterManager 経由でダメージを適用
+        gameCharacterManager.ApplyDamageToCurrent(damage);
     }
 
     public void Heal(int amount)
     {
-        currentHP += amount;
-        if (currentHP > maxHP) currentHP = maxHP;
-        UpdateHPBar();
-    }
-
-    void UpdateHPBar()
-    {
-        if (hpBar != null)
+        if (gameCharacterManager == null)
         {
-            hpBar.value = (float)currentHP / maxHP;
+            return;
         }
+
+        // GameCharacterManager 経由で回復を適用
+        gameCharacterManager.HealCurrent(amount);
     }
 
     // Enemyタグに当たったらダメージ（無敵時間考慮）
@@ -53,16 +54,6 @@ public class PlayerHP : MonoBehaviour
                 TakeDamage(10); // 例：10ダメージ
                 lastDamageTime = Time.time; // ここでのみ更新
             }
-        }
-    }
-
-    // Menu.csのShowGameOverを呼び出す
-    void GameOver()
-    {
-        GameMenu gamemenu = FindObjectOfType<GameMenu>();
-        if (gamemenu != null)
-        {
-            gamemenu.ShowGameOver();
         }
     }
 }

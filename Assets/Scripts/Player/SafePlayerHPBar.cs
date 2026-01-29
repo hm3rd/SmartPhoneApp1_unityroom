@@ -2,60 +2,157 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// プレイヤーのHPを安全に表示する独立したSlider管理（簡略版）
-/// PlayerHP.csのhpBarは触らず、別のSliderで表示する。
-/// 位置追従やオプションは持たず、値の反映のみ行う。
+/// プレイヤーのHPを安全に表示する独立したSlider管理
+/// GameCharacterManager から3体全員のHP を取得して常に表示する
+/// キャラクター交代時にHPが正しく反映される
+/// HP 0 で自動交代、全員HP 0 でゲームオーバー処理
 /// </summary>
 public class SafePlayerHPBar : MonoBehaviour
 {
+    private const int CHARACTER_SLOT_COUNT = 3;
+
     [Header("参照設定")]
-    [Tooltip("監視するPlayerHPコンポーネント")]
-    public PlayerHP playerHP;
+    [Tooltip("GameCharacterManager（キャラクター管理）")]
+    public GameCharacterManager gameCharacterManager;
     
-    [Tooltip("表示用のSlider（Screen Space OverlayまたはWorld Space独立Canvas推奨）")]
-    public Slider displaySlider;
+    [Tooltip("3体分のHPスライダー")]
+    public Slider[] displaySliders = new Slider[CHARACTER_SLOT_COUNT];
+    
+    [Tooltip("3体分のHP数値表示用テキスト")]
+    public Text[] hpTexts = new Text[CHARACTER_SLOT_COUNT];
+    
+    [Tooltip("ゲームメニュー（ゲームオーバー処理用）")]
+    public GameMenu gameMenu;
     
     void Start()
     {
         // 自動検索
-        if (playerHP == null)
+        if (gameCharacterManager == null)
         {
-            playerHP = FindFirstObjectByType<PlayerHP>();
-            if (playerHP == null)
+            gameCharacterManager = FindObjectOfType<GameCharacterManager>();
+            if (gameCharacterManager == null)
             {
-                Debug.LogError("SafePlayerHPBar: PlayerHPが見つかりません");
                 enabled = false;
                 return;
             }
         }
         
-        if (displaySlider == null)
+        // Sliders の確認
+        bool slidersValid = true;
+        for (int i = 0; i < CHARACTER_SLOT_COUNT; i++)
         {
-            Debug.LogError("SafePlayerHPBar: displaySliderが設定されていません");
-            enabled = false;
-            return;
+            if (displaySliders[i] == null)
+            {
+                slidersValid = false;
+            }
+            else
+            {
+                // Slider の初期化
+                displaySliders[i].minValue = 0f;
+                displaySliders[i].maxValue = 1f;
+                displaySliders[i].wholeNumbers = false;
+            }
         }
         
-        // Sliderの初期化
-        displaySlider.minValue = 0f;
-        displaySlider.maxValue = 1f;
-        displaySlider.wholeNumbers = false;
+        if (!slidersValid)
+        {
+        }
+        
+        if (gameMenu == null)
+        {
+            gameMenu = FindObjectOfType<GameMenu>();
+            if (gameMenu == null)
+            {
+            }
+        }
         
         UpdateDisplay();
     }
     
     void LateUpdate()
     {
-        // HP値を更新（値の反映のみ）
+        // 全キャラクターのHP値を更新
         UpdateDisplay();
+        CheckForCharacterDeath();
     }
     
+    /// <summary>
+    /// 3体全員のHP表示を更新
+    /// </summary>
     void UpdateDisplay()
     {
-        if (playerHP == null || displaySlider == null) return;
+        if (gameCharacterManager == null)
+        {
+            return;
+        }
         
-        // PlayerHPから現在値と最大値を読み取って、Sliderに反映
-        float ratio = (float)playerHP.currentHP / playerHP.maxHP;
-        displaySlider.value = ratio;
+        // displaySliders の配列サイズをチェック
+        if (displaySliders == null || displaySliders.Length == 0)
+        {
+            return;
+        }
+        
+        // 3体分のHP表示を更新
+        for (int i = 0; i < CHARACTER_SLOT_COUNT; i++)
+        {
+            int currentHp = gameCharacterManager.GetCharacterCurrentHp(i);
+            int maxHp = gameCharacterManager.GetCharacterMaxHp(i);
+            
+            if (maxHp <= 0)
+            {
+                continue;
+            }
+            
+            // Slider に反映
+            if (i < displaySliders.Length && displaySliders[i] != null)
+            {
+                float ratio = (float)currentHp / maxHp;
+                displaySliders[i].value = ratio;
+            }
+            
+            // テキスト表示（設定されている場合）
+            if (hpTexts != null && i < hpTexts.Length && hpTexts[i] != null)
+            {
+                hpTexts[i].text = $"{currentHp}/{maxHp}";
+            }
+        }
+    }
+    
+    /// <summary>
+    /// キャラクターの死亡判定と自動交代処理
+    /// </summary>
+    void CheckForCharacterDeath()
+    {
+        if (gameCharacterManager == null) return;
+        
+        // アクティブキャラクター（常にスロット0）のHPをチェック
+        int currentHp = gameCharacterManager.GetCharacterCurrentHp(0);
+        
+        // 現在のアクティブキャラクター（スロット0）のHPが0になったか判定
+        if (currentHp <= 0)
+        {
+            // 次のHP が残っているキャラクターに交代
+            if (!gameCharacterManager.SwapToNextAliveCharacter())
+            {
+                // 全員のHPが0 の場合
+                OnAllCharactersDead();
+            }
+            else
+            {
+                UpdateDisplay();
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 全キャラクター死亡時の処理
+    /// </summary>
+    void OnAllCharactersDead()
+    {
+        if (gameMenu != null)
+        {
+            gameMenu.ShowGameOver();
+        }
     }
 }
+

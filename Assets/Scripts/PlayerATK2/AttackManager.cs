@@ -49,6 +49,24 @@ public class AttackManager : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// 使用可能な攻撃リストを差し替え、クールタイムを再初期化する
+    /// キャラクター交代時に呼び出す
+    /// </summary>
+    public void SetAvailableAttacks(List<AttackData> newAttacks)
+    {
+        availableAttacks = newAttacks ?? new List<AttackData>();
+        cooldownTimers.Clear();
+
+        foreach (var attack in availableAttacks)
+        {
+            if (attack != null)
+            {
+                cooldownTimers[attack] = 0f;
+            }
+        }
+    }
     
     void Update()
     {
