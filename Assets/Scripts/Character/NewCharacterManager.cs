@@ -131,10 +131,7 @@ public class NewCharacterManager : MonoBehaviour
             UpdateSlotDisplay(i);
         }
 
-        if (startGameButton != null)
-        {
-            startGameButton.SetActive(false);
-        }
+        CheckAllCharactersSelected();
     }
 
     /// <summary>

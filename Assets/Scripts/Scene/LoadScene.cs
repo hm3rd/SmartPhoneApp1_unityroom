@@ -26,6 +26,15 @@ public class LoadScene : MonoBehaviour
             return;
         }
 
+        if (SceneManager.GetActiveScene().name == "GameScene" && targetSceneName == "HomeScene")
+        {
+            PlayerPrefs.DeleteKey("ShowPreparationPanel");
+            PlayerPrefs.DeleteKey("ReturnSceneName");
+            PlayerPrefs.DeleteKey("CurrentSelectingSlot");
+            PlayerPrefs.DeleteKey("PreparingStageIndex");
+            PlayerPrefs.Save();
+        }
+
         // ステージ番号が指定されていれば保存
         if (stageIndex >= 0)
         {
