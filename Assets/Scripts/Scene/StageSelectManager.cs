@@ -6,6 +6,9 @@ using UnityEngine.UI;
 /// </summary>
 public class StageSelectManager : MonoBehaviour
 {
+    private const string ShowPreparationPanelKey = "ShowPreparationPanel";
+    private const string PreparingStageIndexKey = "PreparingStageIndex";
+
     [Header("準備画面")]
     [Tooltip("ステージ選択後に表示するパネル")]
     public GameObject preparationPanel;
@@ -21,9 +24,17 @@ public class StageSelectManager : MonoBehaviour
     
     void Start()
     {
+        bool isReturningFromCharacterSelect = PlayerPrefs.GetInt(ShowPreparationPanelKey, 0) == 1;
+
         if (preparationPanel != null)
         {
-            preparationPanel.SetActive(false);
+            preparationPanel.SetActive(isReturningFromCharacterSelect);
+        }
+
+        if (isReturningFromCharacterSelect)
+        {
+            selectedStageIndex = PlayerPrefs.GetInt(PreparingStageIndexKey, -1);
+            UpdateStageInfo();
         }
         
         if (readyButton != null)
@@ -38,6 +49,8 @@ public class StageSelectManager : MonoBehaviour
     public void SelectStage(int stageNumber)
     {
         selectedStageIndex = stageNumber;
+        PlayerPrefs.SetInt(PreparingStageIndexKey, selectedStageIndex);
+        PlayerPrefs.Save();
         Debug.Log($"ステージ {selectedStageIndex} を選択しました");
         
         // 準備画面を表示
@@ -47,10 +60,7 @@ public class StageSelectManager : MonoBehaviour
         }
         
         // ステージ情報を表示
-        if (stageInfoText != null)
-        {
-            stageInfoText.text = $"ステージ {selectedStageIndex + 1}";
-        }
+        UpdateStageInfo();
     }
     
     /// <summary>
@@ -68,6 +78,7 @@ public class StageSelectManager : MonoBehaviour
         
         // PlayerPrefs に保存（NewStageManager で読み込む）
         PlayerPrefs.SetInt("SelectedStageIndex", selectedStageIndex);
+        PlayerPrefs.DeleteKey(PreparingStageIndexKey);
         PlayerPrefs.Save();
         
         // ゲームシーンへ遷移
@@ -75,5 +86,13 @@ public class StageSelectManager : MonoBehaviour
         gameSceneLoader.targetSceneName = "GameScene";
         gameSceneLoader.stageIndex = selectedStageIndex;
         gameSceneLoader.LoadTargetScene();
+    }
+
+    private void UpdateStageInfo()
+    {
+        if (stageInfoText != null && selectedStageIndex >= 0)
+        {
+            stageInfoText.text = $"ステージ {selectedStageIndex + 1}";
+        }
     }
 }

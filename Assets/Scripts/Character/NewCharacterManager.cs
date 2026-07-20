@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -89,9 +90,18 @@ public class NewCharacterManager : MonoBehaviour
         if (PlayerPrefs.GetInt("ShowPreparationPanel", 0) == 1)
         {
             ShowPreparationPanel();
-            PlayerPrefs.DeleteKey("ShowPreparationPanel");
+            StartCoroutine(ClearReturnStateAfterInitialization());
             Debug.Log("CharacterScene から戻ってきました");
         }
+    }
+
+    private IEnumerator ClearReturnStateAfterInitialization()
+    {
+        yield return null;
+        PlayerPrefs.DeleteKey("ShowPreparationPanel");
+        PlayerPrefs.DeleteKey("ReturnSceneName");
+        PlayerPrefs.DeleteKey("CurrentSelectingSlot");
+        PlayerPrefs.Save();
     }
 
     /// <summary>

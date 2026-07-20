@@ -3,6 +3,7 @@ using UnityEngine;
 public class PanelManager : MonoBehaviour
 {
     public GameObject targetPanel; // Inspectorで表示/非表示したいパネルをアサイン
+    [SerializeField] private bool keepCurrentStateOnStart;
 
     private static readonly System.Collections.Generic.List<GameObject> registeredPanels = new System.Collections.Generic.List<GameObject>();
 
@@ -14,7 +15,7 @@ public class PanelManager : MonoBehaviour
 
     void Start()
     {
-        if (targetPanel != null)
+        if (targetPanel != null && !keepCurrentStateOnStart)
             targetPanel.SetActive(false); // 初期状態ではパネルを非表示にする
     }
 
