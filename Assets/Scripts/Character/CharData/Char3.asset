@@ -13,13 +13,12 @@ MonoBehaviour:
   m_Name: Char3
   m_EditorClassIdentifier: 
   characterId: 3
-  characterName: jon
-  description: bye
-  characterSprite: {fileID: 2530564911472380330, guid: d1472e6c0796c9246862a8567be9fcba, type: 3}
+  characterName: "\u7A32\u8449\u90F7"
+  description: "\u3070\u3054\u3061\u3083\u3093"
+  characterSprite: {fileID: -3146666543393098173, guid: 23597c0ed3aca0448aa66aa3d63a1a5e, type: 3}
   maxHP: 100
   moveSpeed: 5
   availableAttacks:
   - {fileID: 11400000, guid: 81bf17976fb66ec4281c11579932022b, type: 2}
-  - {fileID: 11400000, guid: 0c44c75ad263b5e4aa1458532b8f46f2, type: 2}
   characterPrefab: {fileID: 0}
   themeColor: {r: 1, g: 1, b: 1, a: 1}

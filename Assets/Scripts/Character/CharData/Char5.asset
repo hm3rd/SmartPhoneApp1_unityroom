@@ -13,13 +13,12 @@ MonoBehaviour:
   m_Name: Char5
   m_EditorClassIdentifier: 
   characterId: 5
-  characterName: teriri
+  characterName: "\u6851\u540D\u8C6A"
   description: 
-  characterSprite: {fileID: -1701308313540170450, guid: d51af3726b8a5c74da9443cb0c5b5418, type: 3}
-  maxHP: 100
+  characterSprite: {fileID: 1755411306012904776, guid: 51918bfd644c82e4ea5138fe1ad1359f, type: 3}
+  maxHP: 150
   moveSpeed: 5
   availableAttacks:
   - {fileID: 11400000, guid: 81bf17976fb66ec4281c11579932022b, type: 2}
-  - {fileID: 11400000, guid: 0c44c75ad263b5e4aa1458532b8f46f2, type: 2}
   characterPrefab: {fileID: 0}
   themeColor: {r: 1, g: 1, b: 1, a: 1}

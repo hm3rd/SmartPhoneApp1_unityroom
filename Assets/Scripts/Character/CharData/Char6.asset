@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7d0c161ea237b904ebe52fef2169dd77, type: 3}
-  m_Name: Char4
+  m_Name: Char6
   m_EditorClassIdentifier: 
-  characterId: 4
-  characterName: "\u57CE\u548C\u6CC9\u6B63\u5B97"
+  characterId: 6
+  characterName: "\u725B\u738B\u5409\u5149"
   description: 
-  characterSprite: {fileID: -1118591109253073054, guid: e74394696dac90442987d51a2d7941bf, type: 3}
-  maxHP: 100
+  characterSprite: {fileID: 8449445891927765753, guid: 5eb8b4db9ef918e488a9b40b7446e1df, type: 3}
+  maxHP: 80
   moveSpeed: 5
   availableAttacks:
   - {fileID: 11400000, guid: e5620a6d0fce3d046b76813ef5424b84, type: 2}

@@ -20,6 +20,5 @@ MonoBehaviour:
   moveSpeed: 5
   availableAttacks:
   - {fileID: 11400000, guid: e5620a6d0fce3d046b76813ef5424b84, type: 2}
-  - {fileID: 11400000, guid: 0c44c75ad263b5e4aa1458532b8f46f2, type: 2}
   characterPrefab: {fileID: 0}
   themeColor: {r: 1, g: 1, b: 1, a: 1}

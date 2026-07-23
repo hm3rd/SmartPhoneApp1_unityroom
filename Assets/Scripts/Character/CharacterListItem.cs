@@ -92,7 +92,9 @@ public class CharacterListItem : MonoBehaviour
         PlayerPrefs.Save();
         
         // 戻り先シーンを決定
-        string targetScene = PlayerPrefs.GetString("ReturnSceneName", returnSceneName);
+        string targetScene = HomeScenePanelState.HasSavedState
+            ? HomeScenePanelState.ReturnSceneName
+            : PlayerPrefs.GetString("ReturnSceneName", returnSceneName);
         if (string.IsNullOrEmpty(targetScene))
         {
             targetScene = returnSceneName;

@@ -1,16 +1,10 @@
 fileFormatVersion: 2
-guid: b76de24032c91ef49b2242b0ad74c453
+guid: d85fa68279a952740ae138c42de780e5
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4724497485027514106
-    second: Fo1FxoAaEAAwLec_0
-  - first:
-      213: 5729885244302709056
-    second: Fo1FxoAaEAAwLec_1
-  - first:
-      213: 727115058556267572
-    second: Fo1FxoAaEAAwLec_2
+      213: -8108719791250420797
+    second: kage65img_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -115,17 +109,30 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Fo1FxoAaEAAwLec_0
+      name: kage65img_0
       rect:
         serializedVersion: 2
-        x: 6
-        y: 9
-        width: 669
-        height: 625
+        x: 0
+        y: 161
+        width: 680
+        height: 817
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -134,52 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: af69a416e69c09140800000000000000
-      internalID: 4724497485027514106
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Fo1FxoAaEAAwLec_1
-      rect:
-        serializedVersion: 2
-        x: 92
-        y: 606
-        width: 127
-        height: 101
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 0415a6e7544a48f40800000000000000
-      internalID: 5729885244302709056
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Fo1FxoAaEAAwLec_2
-      rect:
-        serializedVersion: 2
-        x: 230
-        y: 561
-        width: 74
-        height: 83
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 43c65181b4b371a00800000000000000
-      internalID: 727115058556267572
+      spriteID: 3cbc65bcf4a087f80800000000000000
+      internalID: -8108719791250420797
       vertices: []
       indices: 
       edges: []
@@ -197,10 +160,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      Fo1FxoAaEAAwLec_0: 4724497485027514106
-      Fo1FxoAaEAAwLec_1: 5729885244302709056
-      Fo1FxoAaEAAwLec_2: 727115058556267572
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

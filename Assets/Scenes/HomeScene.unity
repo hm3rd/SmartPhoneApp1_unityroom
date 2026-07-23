@@ -2647,7 +2647,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &722215989
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3067,6 +3067,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetPanel: {fileID: 43849884}
   keepCurrentStateOnStart: 0
+  restorePreparationPanelState: 0
 --- !u!4 &852444998
 Transform:
   m_ObjectHideFlags: 0
@@ -4062,7 +4063,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 81dc779407b058b41add277d2199b8a0, type: 2}
   - {fileID: 11400000, guid: 73eee08c8c7645f4587f238205c6a3d4, type: 2}
   - {fileID: 11400000, guid: 7937e6fb140c4b34b84baaf1713b21e9, type: 2}
-  - {fileID: 11400000, guid: 9ffe912eab2f71f4a9fb4944f3b5c669, type: 2}
+  - {fileID: 11400000, guid: 4c6921df3deb79d4a914d4aca98bf642, type: 2}
 --- !u!4 &1149682548
 Transform:
   m_ObjectHideFlags: 0
@@ -5908,6 +5909,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetPanel: {fileID: 722215988}
   keepCurrentStateOnStart: 1
+  restorePreparationPanelState: 1
 --- !u!1 &1909255451
 GameObject:
   m_ObjectHideFlags: 0
@@ -6212,6 +6214,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetPanel: {fileID: 1503596697}
   keepCurrentStateOnStart: 0
+  restorePreparationPanelState: 0
 --- !u!4 &2063110912
 Transform:
   m_ObjectHideFlags: 0

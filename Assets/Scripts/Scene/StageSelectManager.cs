@@ -6,7 +6,6 @@ using UnityEngine.UI;
 /// </summary>
 public class StageSelectManager : MonoBehaviour
 {
-    private const string ShowPreparationPanelKey = "ShowPreparationPanel";
     private const string PreparingStageIndexKey = "PreparingStageIndex";
 
     [Header("準備画面")]
@@ -24,11 +23,13 @@ public class StageSelectManager : MonoBehaviour
     
     void Start()
     {
-        bool isReturningFromCharacterSelect = PlayerPrefs.GetInt(ShowPreparationPanelKey, 0) == 1;
+        bool isReturningFromCharacterSelect = HomeScenePanelState.HasSavedState;
 
-        if (preparationPanel != null)
+        if (isReturningFromCharacterSelect &&
+            HomeScenePanelState.IsPreparationPanelActive &&
+            preparationPanel != null)
         {
-            preparationPanel.SetActive(isReturningFromCharacterSelect);
+            preparationPanel.SetActive(true);
         }
 
         if (isReturningFromCharacterSelect)
@@ -37,10 +38,6 @@ public class StageSelectManager : MonoBehaviour
             UpdateStageInfo();
         }
         
-        if (readyButton != null)
-        {
-            readyButton.onClick.AddListener(OnReadyButtonClicked);
-        }
     }
     
     /// <summary>

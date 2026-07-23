@@ -76,32 +76,39 @@ public class NewCharacterManager : MonoBehaviour
     private void InitializeManager()
     {
         if (initialized) return;
-        
+
+        bool shouldRestorePanelState = HomeScenePanelState.HasSavedState;
+
         initialized = true;
         LoadSelectionsFromPrefs();
         InitializeUI();
-        
-        // 準備パネルを最初に表示
-        ShowPreparationPanel();
-        
-        CheckForReturnedCharacter();
 
-        // CharacterSceneから戻ってきた場合、準備パネルを確実に表示
-        if (PlayerPrefs.GetInt("ShowPreparationPanel", 0) == 1)
+        if (shouldRestorePanelState)
         {
-            ShowPreparationPanel();
-            StartCoroutine(ClearReturnStateAfterInitialization());
+            CheckForReturnedCharacter();
+            RestorePreparationPanelState();
+            StartCoroutine(RestorePanelStateAfterInitialization());
             Debug.Log("CharacterScene から戻ってきました");
         }
     }
 
-    private IEnumerator ClearReturnStateAfterInitialization()
+    private IEnumerator RestorePanelStateAfterInitialization()
     {
         yield return null;
+        RestorePreparationPanelState();
+        HomeScenePanelState.Clear();
         PlayerPrefs.DeleteKey("ShowPreparationPanel");
         PlayerPrefs.DeleteKey("ReturnSceneName");
         PlayerPrefs.DeleteKey("CurrentSelectingSlot");
         PlayerPrefs.Save();
+    }
+
+    private void RestorePreparationPanelState()
+    {
+        if (preparationPanel != null)
+        {
+            preparationPanel.SetActive(HomeScenePanelState.IsPreparationPanelActive);
+        }
     }
 
     /// <summary>
@@ -143,7 +150,9 @@ public class NewCharacterManager : MonoBehaviour
 
         int characterId = PlayerPrefs.GetInt("TempSelectedCharacterId", INVALID_CHARACTER_ID);
         string characterName = PlayerPrefs.GetString("TempSelectedCharacterName", "");
-        currentSelectingSlot = PlayerPrefs.GetInt("CurrentSelectingSlot", 0);
+        currentSelectingSlot = HomeScenePanelState.HasSavedState
+            ? HomeScenePanelState.SelectingSlot
+            : PlayerPrefs.GetInt("CurrentSelectingSlot", 0);
 
         Sprite characterSprite = null;
         if (characterDatabase != null)
@@ -157,7 +166,6 @@ public class NewCharacterManager : MonoBehaviour
         PlayerPrefs.DeleteKey("TempSelectedCharacterName");
         PlayerPrefs.DeleteKey("TempSelectedCharacterIconId");
         
-        ShowPreparationPanel();
     }
 
     /// <summary>
@@ -170,9 +178,15 @@ public class NewCharacterManager : MonoBehaviour
         currentSelectingSlot = slotIndex;
         isWaitingForSelection = true;
 
+        HomeScenePanelState.Save(
+            preparationPanel != null && preparationPanel.activeSelf,
+            slotIndex,
+            SceneManager.GetActiveScene().name);
+
         PlayerPrefs.SetInt("CurrentSelectingSlot", slotIndex);
         PlayerPrefs.SetString("ReturnSceneName", SceneManager.GetActiveScene().name);
         PlayerPrefs.SetInt("ShowPreparationPanel", 1);
+        PlayerPrefs.Save();
 
         SceneManager.LoadScene(characterSelectSceneName);
     }
@@ -211,6 +225,15 @@ public class NewCharacterManager : MonoBehaviour
     {
         if (!IsValidSlotIndex(currentSelectingSlot)) return;
 
+        int existingSlot = FindSelectedCharacterSlot(characterId);
+        if (existingSlot != -1 && existingSlot != currentSelectingSlot)
+        {
+            selectedCharacterIds[existingSlot] = selectedCharacterIds[currentSelectingSlot];
+            selectedCharacterNames[existingSlot] = selectedCharacterNames[currentSelectingSlot];
+            selectedCharacterSprites[existingSlot] = selectedCharacterSprites[currentSelectingSlot];
+            UpdateSlotDisplay(existingSlot);
+        }
+
         selectedCharacterIds[currentSelectingSlot] = characterId;
         selectedCharacterNames[currentSelectingSlot] = characterName;
         selectedCharacterSprites[currentSelectingSlot] = characterSprite;
@@ -219,6 +242,19 @@ public class NewCharacterManager : MonoBehaviour
         isWaitingForSelection = false;
         CheckAllCharactersSelected();
         SaveSelectionsToPrefs();
+    }
+
+    private int FindSelectedCharacterSlot(int characterId)
+    {
+        for (int i = 0; i < CHARACTER_SLOT_COUNT; i++)
+        {
+            if (selectedCharacterIds[i] == characterId)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     /// <summary>
@@ -231,6 +267,8 @@ public class NewCharacterManager : MonoBehaviour
             PlayerPrefs.SetInt($"SelectedCharacterId_{i}", selectedCharacterIds[i]);
             PlayerPrefs.SetString($"SelectedCharacterName_{i}", selectedCharacterNames[i]);
         }
+
+        PlayerPrefs.Save();
     }
 
     /// <summary>
@@ -277,6 +315,13 @@ public class NewCharacterManager : MonoBehaviour
 
         if (startGameButton != null)
         {
+            Button button = startGameButton.GetComponent<Button>();
+            if (button != null)
+            {
+                button.onClick.RemoveListener(OnStartGameButtonClicked);
+                button.onClick.AddListener(OnStartGameButtonClicked);
+            }
+
             startGameButton.SetActive(allSelected);
         }
     }
@@ -295,6 +340,20 @@ public class NewCharacterManager : MonoBehaviour
     public void OnStartGameButtonClicked()
     {
         SaveSelectionsToPrefs();
+
+        int preparingStageIndex = PlayerPrefs.GetInt("PreparingStageIndex", -1);
+        if (preparingStageIndex >= 0)
+        {
+            PlayerPrefs.SetInt("SelectedStageIndex", preparingStageIndex);
+            PlayerPrefs.DeleteKey("PreparingStageIndex");
+        }
+
+        HomeScenePanelState.Clear();
+        PlayerPrefs.DeleteKey("ShowPreparationPanel");
+        PlayerPrefs.DeleteKey("ReturnSceneName");
+        PlayerPrefs.DeleteKey("CurrentSelectingSlot");
+        PlayerPrefs.Save();
+
         Time.timeScale = 1f;
         SceneManager.LoadScene(gameSceneName);
     }

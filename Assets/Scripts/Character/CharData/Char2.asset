@@ -13,13 +13,12 @@ MonoBehaviour:
   m_Name: Char2
   m_EditorClassIdentifier: 
   characterId: 2
-  characterName: mike
-  description: hello
-  characterSprite: {fileID: 4724497485027514106, guid: b76de24032c91ef49b2242b0ad74c453, type: 3}
+  characterName: "\u30BD\u30DC\u30ED\u52A9\u5EE3(\u5F71\u6253)"
+  description: 
+  characterSprite: {fileID: -8108719791250420797, guid: d85fa68279a952740ae138c42de780e5, type: 3}
   maxHP: 100
   moveSpeed: 5
   availableAttacks:
   - {fileID: 11400000, guid: 7f13602d2c7925641a7c8db62713189b, type: 2}
-  - {fileID: 11400000, guid: 0c44c75ad263b5e4aa1458532b8f46f2, type: 2}
   characterPrefab: {fileID: 0}
   themeColor: {r: 1, g: 1, b: 1, a: 1}
