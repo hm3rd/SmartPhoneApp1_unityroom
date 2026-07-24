@@ -11,7 +11,8 @@ public class AttackData : ScriptableObject
     {
         Normal,
         MultiHit,
-        Charge
+        Charge,
+        Projectile
     }
 
     [Header("基本情報")]
@@ -57,6 +58,34 @@ public class AttackData : ScriptableObject
     [Tooltip("左向きのときPrefabのX軸を反転する")]
     public bool flipOnDirection = true;
 
+    [Header("ノックバック")]
+    [Min(0f)]
+    [Tooltip("命中した敵を後退させる距離。0ならノックバックしません")]
+    public float knockbackDistance;
+
+    [Min(0.01f)]
+    [Tooltip("敵が後退する時間")]
+    public float knockbackDuration = 0.15f;
+
+    [Header("飛び道具")]
+    [Min(0f)]
+    [Tooltip("弾が1秒間に進む距離")]
+    public float projectileSpeed = 8f;
+
+    [Min(0.01f)]
+    [Tooltip("画面外判定ができない場合も弾を残し続けないための最大寿命")]
+    public float projectileLifetime = 5f;
+
+    [Tooltip("敵に命中した弾を削除します。OFFなら複数の敵を貫通します")]
+    public bool destroyProjectileOnHit = true;
+
+    [Tooltip("ゲーム画面の外へ出た弾を削除します")]
+    public bool destroyProjectileOffScreen = true;
+
+    [Min(0f)]
+    [Tooltip("画面端から削除位置までの余白（Viewport基準）")]
+    public float offScreenMargin = 0.05f;
+
     [Header("多段攻撃")]
     [Min(1)] public int hitCount = 3;
     [Min(0f)] public float hitInterval = 0.15f;
@@ -80,6 +109,11 @@ public class AttackData : ScriptableObject
         scale = Mathf.Max(0f, scale);
         scaleAxes.x = Mathf.Max(0f, scaleAxes.x);
         scaleAxes.y = Mathf.Max(0f, scaleAxes.y);
+        knockbackDistance = Mathf.Max(0f, knockbackDistance);
+        knockbackDuration = Mathf.Max(0.01f, knockbackDuration);
+        projectileSpeed = Mathf.Max(0f, projectileSpeed);
+        projectileLifetime = Mathf.Max(0.01f, projectileLifetime);
+        offScreenMargin = Mathf.Max(0f, offScreenMargin);
 
         hitCount = Mathf.Max(1, hitCount);
         hitInterval = Mathf.Max(0f, hitInterval);

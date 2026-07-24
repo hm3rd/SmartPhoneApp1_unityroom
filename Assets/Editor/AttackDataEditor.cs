@@ -22,7 +22,14 @@ public class AttackDataEditor : Editor
             DrawSection("ダメージ・クールタイム", "damage", "cooldownTime");
         }
 
-        DrawSection("攻撃判定", "hitBoxPrefab", "duration");
+        if (type == AttackData.AttackType.Projectile)
+        {
+            DrawSection("攻撃判定", "hitBoxPrefab");
+        }
+        else
+        {
+            DrawSection("攻撃判定", "hitBoxPrefab", "duration");
+        }
         DrawSection(
             "生成位置",
             "spawnDistance",
@@ -34,6 +41,10 @@ public class AttackDataEditor : Editor
             "scaleAxes",
             "rotationZ",
             "flipOnDirection");
+        DrawSection(
+            "ノックバック",
+            "knockbackDistance",
+            "knockbackDuration");
 
         if (type == AttackData.AttackType.MultiHit)
         {
@@ -52,6 +63,19 @@ public class AttackDataEditor : Editor
                 "maxDamage",
                 "minScale",
                 "maxScale");
+        }
+        else if (type == AttackData.AttackType.Projectile)
+        {
+            DrawSection(
+                "飛び道具",
+                "projectileSpeed",
+                "projectileLifetime",
+                "destroyProjectileOnHit",
+                "destroyProjectileOffScreen",
+                "offScreenMargin");
+            EditorGUILayout.HelpBox(
+                "Projectile Lifetimeは画面外削除ができない場合の安全用最大寿命です。",
+                MessageType.Info);
         }
 
         serializedObject.ApplyModifiedProperties();

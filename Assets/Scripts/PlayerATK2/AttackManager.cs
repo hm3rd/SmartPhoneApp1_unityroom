@@ -277,11 +277,36 @@ public class AttackManager : MonoBehaviour
         HitBox hitBox = hitBoxObj.GetComponent<HitBox>();
         if (hitBox != null)
         {
-            hitBox.SetDamage(Mathf.Max(0, damage));
+            hitBox.Configure(
+                Mathf.Max(0, damage),
+                playerTransform.position,
+                new Vector2(directionSign, 0f),
+                attackData.knockbackDistance,
+                attackData.knockbackDuration,
+                attackData.attackType == AttackData.AttackType.Projectile &&
+                    attackData.destroyProjectileOnHit);
+        }
+
+        if (attackData.attackType == AttackData.AttackType.Projectile)
+        {
+            ProjectileMovement projectile =
+                hitBoxObj.GetComponent<ProjectileMovement>();
+            if (projectile == null)
+            {
+                projectile = hitBoxObj.AddComponent<ProjectileMovement>();
+            }
+            projectile.Initialize(
+                new Vector2(directionSign, 0f),
+                attackData.projectileSpeed,
+                attackData.destroyProjectileOffScreen,
+                attackData.offScreenMargin);
         }
         
-        // 持続時間後に削除
-        Destroy(hitBoxObj, Mathf.Max(0f, attackData.duration));
+        float lifetime =
+            attackData.attackType == AttackData.AttackType.Projectile
+                ? Mathf.Max(0.01f, attackData.projectileLifetime)
+                : Mathf.Max(0f, attackData.duration);
+        Destroy(hitBoxObj, lifetime);
         
         Debug.Log($"{attackData.attackName} を実行 (ダメージ: {damage})");
     }

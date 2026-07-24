@@ -120,7 +120,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 3
+  m_Constraints: 4
 --- !u!58 &311372558415552854
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -203,6 +203,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 0.53
+  playerSeparationPadding: 0.05
 --- !u!1 &330153795420946156
 GameObject:
   m_ObjectHideFlags: 0

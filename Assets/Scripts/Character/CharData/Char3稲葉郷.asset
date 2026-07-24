@@ -25,6 +25,6 @@ MonoBehaviour:
   maxHP: 100
   moveSpeed: 5
   availableAttacks:
-  - {fileID: 11400000, guid: 81bf17976fb66ec4281c11579932022b, type: 2}
+  - {fileID: 11400000, guid: c920f5c3aa6f7934cb944a0d572e1e19, type: 2}
   characterPrefab: {fileID: 0}
   themeColor: {r: 1, g: 1, b: 1, a: 1}

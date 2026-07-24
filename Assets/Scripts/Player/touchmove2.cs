@@ -23,6 +23,28 @@ public class TouchMove2 : MonoBehaviour, IPlayerAttack
     public bool isRight { get; set; } = true; // IPlayerAttack 実装
     private bool lastFacingRight = true;
 
+    [Header("敵との重なり防止")]
+    [Min(0.01f)]
+    [Tooltip("重なり防止用CircleCollider2Dの半径。接触ダメージ用Triggerとは別に自動生成します")]
+    [SerializeField] private float collisionRadius = 1.7f;
+
+    private Rigidbody2D rb;
+    private Vector2 pendingMovement;
+
+    void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.gravityScale = 0f;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        }
+
+        EnsureSolidCollider();
+    }
+
     void Start()
     {
         transform.position = new Vector3(transform.position.x, transform.position.y, 0);
@@ -36,6 +58,46 @@ public class TouchMove2 : MonoBehaviour, IPlayerAttack
         }
         Move();
         FlickMove(); // フリック移動を毎フレーム処理
+    }
+
+    void FixedUpdate()
+    {
+        if (pendingMovement.sqrMagnitude <= 0f)
+        {
+            return;
+        }
+
+        if (rb != null)
+        {
+            rb.MovePosition(rb.position + pendingMovement);
+        }
+        else
+        {
+            transform.position += (Vector3)pendingMovement;
+        }
+        pendingMovement = Vector2.zero;
+    }
+
+    private void EnsureSolidCollider()
+    {
+        CircleCollider2D solidCollider = null;
+        CircleCollider2D[] colliders = GetComponents<CircleCollider2D>();
+        foreach (CircleCollider2D collider in colliders)
+        {
+            if (!collider.isTrigger)
+            {
+                solidCollider = collider;
+                break;
+            }
+        }
+
+        if (solidCollider == null)
+        {
+            solidCollider = gameObject.AddComponent<CircleCollider2D>();
+            solidCollider.isTrigger = false;
+        }
+
+        solidCollider.radius = Mathf.Max(0.01f, collisionRadius);
     }
 
     void Move()
@@ -64,7 +126,8 @@ public class TouchMove2 : MonoBehaviour, IPlayerAttack
                     currentPos = touchPos;
                     moveVector = currentPos - firstPos; // 中心からの差分
                     Vector3 moveDir = new Vector3(moveVector.x, moveVector.y, 0).normalized;
-                    transform.position += moveDir * speed * Time.deltaTime;
+                    pendingMovement +=
+                        (Vector2)moveDir * speed * Time.deltaTime;
                 }
                 if (Input.touches[0].phase == TouchPhase.Ended || Input.touches[0].phase == TouchPhase.Canceled)
                 {
@@ -112,7 +175,8 @@ public class TouchMove2 : MonoBehaviour, IPlayerAttack
     {
         if (flickTimer > 0f)
         {
-            transform.position += flickVelocity * Time.deltaTime;
+            pendingMovement +=
+                (Vector2)flickVelocity * Time.deltaTime;
             flickTimer -= Time.deltaTime;
             if (flickTimer <= 0f)
             {
