@@ -13,10 +13,23 @@ MonoBehaviour:
   m_Name: SubAttack
   m_EditorClassIdentifier: 
   attackName: SubAttack
+  attackType: 0
   damage: 50
   cooldownTime: 1
   hitBoxPrefab: {fileID: 4010367103594065226, guid: fd7c14cfa5af4d143b08f9afe039dda4, type: 3}
   duration: 0.2
   spawnDistance: 1
+  spawnOffset: {x: 0, y: 0}
   followPlayerDirection: 1
+  flipOnDirection: 1
   scale: 1
+  scaleAxes: {x: 1, y: 1}
+  rotationZ: 0
+  hitCount: 3
+  hitInterval: 0.15
+  updateDirectionEachHit: 1
+  maxChargeTime: 2
+  minDamage: 10
+  maxDamage: 50
+  minScale: 0.5
+  maxScale: 2

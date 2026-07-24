@@ -13,10 +13,23 @@ MonoBehaviour:
   m_Name: NormalAttack
   m_EditorClassIdentifier: 
   attackName: "\u901A\u5E38\u653B\u6483"
+  attackType: 0
   damage: 10
   cooldownTime: 0
   hitBoxPrefab: {fileID: 5509274092673679156, guid: 730b725bf9653b9438504b1468645d91, type: 3}
   duration: 0.2
   spawnDistance: 1
+  spawnOffset: {x: 0, y: 0}
   followPlayerDirection: 1
+  flipOnDirection: 1
   scale: 1
+  scaleAxes: {x: 1, y: 1}
+  rotationZ: 0
+  hitCount: 3
+  hitInterval: 0.15
+  updateDirectionEachHit: 1
+  maxChargeTime: 2
+  minDamage: 10
+  maxDamage: 50
+  minScale: 0.5
+  maxScale: 2

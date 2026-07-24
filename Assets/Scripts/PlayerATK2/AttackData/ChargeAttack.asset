@@ -9,20 +9,27 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6fe6b224042f0c1439d551b8990e3816, type: 3}
+  m_Script: {fileID: 11500000, guid: 9130b2aabfb8791468648f5a90311bf9, type: 3}
   m_Name: ChargeAttack
   m_EditorClassIdentifier: 
   attackName: "\u901A\u5E38\u653B\u6483"
+  attackType: 2
   damage: 10
   cooldownTime: 0.5
   hitBoxPrefab: {fileID: 4509635826990389274, guid: 4428b71e2c9217243a9690bf1c196dbc, type: 3}
   duration: 0.2
   spawnDistance: 2
+  spawnOffset: {x: 0, y: 0}
   followPlayerDirection: 1
   flipOnDirection: 1
   scale: 1
+  scaleAxes: {x: 1, y: 1}
+  rotationZ: 0
   maxChargeTime: 3
   minDamage: 10
   maxDamage: 50
   minScale: 0.5
   maxScale: 1
+  hitCount: 3
+  hitInterval: 0.15
+  updateDirectionEachHit: 1

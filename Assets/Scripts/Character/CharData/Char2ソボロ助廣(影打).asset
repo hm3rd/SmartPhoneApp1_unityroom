@@ -18,6 +18,9 @@ MonoBehaviour:
   characterSprite: {fileID: -8108719791250420797, guid: d85fa68279a952740ae138c42de780e5, type: 3}
   canBeObtainedFromGacha: 1
   gachaWeight: 10
+  homeTouchPhrases:
+  - "\u3042\u3089\u3001\u308F\u3093\u3061\u3083\u3093\u3069\u3046\u3057\u305F\u306E\uFF1F"
+  - "\u3073\u3063\u304F\u308A\u3057\u305F\uFF01"
   maxHP: 100
   moveSpeed: 5
   availableAttacks:

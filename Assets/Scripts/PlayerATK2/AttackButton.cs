@@ -21,7 +21,7 @@ public class AttackButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     private bool isCharging = false;
     private float currentChargeTime = 0f;
     
-    private ChargeAttackData chargingAttack;
+    private AttackData chargingAttack;
 
     private void Start()
     {
@@ -56,7 +56,7 @@ public class AttackButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
             return;
         }
         
-        if (dataToUse is ChargeAttackData)
+        if (dataToUse.attackType == AttackData.AttackType.Charge)
         {
             // チャージはボタン押し/離しで制御するため、OnClickでは何もしない
         }
@@ -80,8 +80,8 @@ public class AttackButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
     // ===== チャージ攻撃実装 =====
     public void OnPointerDown(PointerEventData eventData)
     {
-        ChargeAttackData chargeData = GetSelectedAttack() as ChargeAttackData;
-        if (chargeData != null)
+        AttackData chargeData = GetSelectedAttack();
+        if (chargeData != null && chargeData.attackType == AttackData.AttackType.Charge)
         {
             // クールタイム中は開始しない
             if (attackManager != null && !attackManager.IsOnCooldown(chargeData))
@@ -109,7 +109,7 @@ public class AttackButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
             return;
         }
 
-        ChargeAttackData chargeData = chargingAttack;
+        AttackData chargeData = chargingAttack;
         isCharging = false;
         attackManager.ExecuteChargedAttack(chargeData, currentChargeTime);
         ResetCharge();

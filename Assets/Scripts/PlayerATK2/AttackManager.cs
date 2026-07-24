@@ -23,7 +23,7 @@ public class AttackManager : MonoBehaviour
     private readonly HashSet<AttackData> attacksInProgress = new HashSet<AttackData>();
     
     // プレイヤーの向き情報
-    private IPlayerDirection playerDirection;
+    private IPlayerAttack playerAttack;
     
     private void Awake()
     {
@@ -32,17 +32,8 @@ public class AttackManager : MonoBehaviour
             playerTransform = transform;
         }
         
-        // プレイヤーの向き情報を取得
-        playerDirection = GetComponent<IPlayerDirection>();
-        if (playerDirection == null)
-        {
-            // IPlayerAttackインターフェースも試す（互換性のため）
-            var playerAttack = GetComponent<IPlayerAttack>();
-            if (playerAttack != null)
-            {
-                playerDirection = new PlayerAttackAdapter(playerAttack);
-            }
-        }
+        // 既存の移動スクリプトが公開する向き情報を利用
+        playerAttack = GetComponent<IPlayerAttack>();
         
         // 全ての攻撃のクールタイマーを初期化
         foreach (var attack in availableAttacks)
@@ -121,15 +112,15 @@ public class AttackManager : MonoBehaviour
             return false;
         }
 
-        if (attackData is ChargeAttackData)
+        if (attackData.attackType == AttackData.AttackType.Charge)
         {
             // チャージ攻撃はボタンを離した時に ExecuteChargedAttack から実行する
             return false;
         }
 
-        if (attackData is MultiHitAttackData multiHit)
+        if (attackData.attackType == AttackData.AttackType.MultiHit)
         {
-            StartCoroutine(ExecuteMultiHit(multiHit));
+            StartCoroutine(ExecuteMultiHit(attackData));
         }
         else
         {
@@ -143,7 +134,7 @@ public class AttackManager : MonoBehaviour
     /// <summary>
     /// チャージ時間から威力を計算して攻撃する。
     /// </summary>
-    public bool ExecuteChargedAttack(ChargeAttackData attackData, float chargeTime)
+    public bool ExecuteChargedAttack(AttackData attackData, float chargeTime)
     {
         if (attackData == null || IsOnCooldown(attackData) || attacksInProgress.Contains(attackData))
         {
@@ -153,21 +144,26 @@ public class AttackManager : MonoBehaviour
         float maxTime = Mathf.Max(0.01f, attackData.maxChargeTime);
         float ratio = Mathf.Clamp01(chargeTime / maxTime);
         int damage = Mathf.RoundToInt(Mathf.Lerp(attackData.minDamage, attackData.maxDamage, ratio));
-        float scale = Mathf.Lerp(attackData.minScale, attackData.maxScale, ratio);
+        float scale = attackData.scale *
+            Mathf.Lerp(attackData.minScale, attackData.maxScale, ratio);
 
         SpawnAttack(attackData, damage, scale);
         StartCooldown(attackData);
         return true;
     }
 
-    private IEnumerator ExecuteMultiHit(MultiHitAttackData attackData)
+    private IEnumerator ExecuteMultiHit(AttackData attackData)
     {
         attacksInProgress.Add(attackData);
+        bool initialFacingRight = IsFacingRight();
 
         int hitCount = Mathf.Max(1, attackData.hitCount);
         for (int i = 0; i < hitCount; i++)
         {
-            SpawnAttack(attackData, attackData.damage, attackData.scale);
+            bool? fixedDirection = attackData.updateDirectionEachHit
+                ? null
+                : initialFacingRight;
+            SpawnAttack(attackData, attackData.damage, attackData.scale, fixedDirection);
             if (i < hitCount - 1)
             {
                 yield return new WaitForSeconds(Mathf.Max(0f, attackData.hitInterval));
@@ -235,7 +231,11 @@ public class AttackManager : MonoBehaviour
     /// <summary>
     /// 攻撃を生成
     /// </summary>
-    private void SpawnAttack(AttackData attackData, int damage, float scale)
+    private void SpawnAttack(
+        AttackData attackData,
+        int damage,
+        float scale,
+        bool? facingRightOverride = null)
     {
         if (attackData.hitBoxPrefab == null)
         {
@@ -244,23 +244,29 @@ public class AttackManager : MonoBehaviour
         }
         
         // プレイヤーの向きを取得
-        bool isFacingRight = playerDirection != null ? playerDirection.IsFacingRight : true;
+        bool isFacingRight = facingRightOverride ?? IsFacingRight();
         
         // 生成位置を計算
+        float directionSign = attackData.followPlayerDirection && !isFacingRight ? -1f : 1f;
         Vector3 spawnPosition = playerTransform.position;
-        if (attackData.followPlayerDirection && attackData.spawnDistance > 0f)
-        {
-            Vector3 direction = isFacingRight ? Vector3.right : Vector3.left;
-            spawnPosition += direction * attackData.spawnDistance;
-        }
+        spawnPosition.x += directionSign * (attackData.spawnDistance + attackData.spawnOffset.x);
+        spawnPosition.y += attackData.spawnOffset.y;
         
         // ヒットボックスを生成
-        GameObject hitBoxObj = Instantiate(attackData.hitBoxPrefab, spawnPosition, Quaternion.identity);
+        GameObject hitBoxObj = Instantiate(
+            attackData.hitBoxPrefab,
+            spawnPosition,
+            Quaternion.Euler(0f, 0f, attackData.rotationZ * directionSign));
         
         // スケール設定
-        hitBoxObj.transform.localScale = Vector3.one * Mathf.Max(0f, scale);
+        hitBoxObj.transform.localScale = new Vector3(
+            Mathf.Max(0f, scale * attackData.scaleAxes.x),
+            Mathf.Max(0f, scale * attackData.scaleAxes.y),
+            1f);
         // 左向きならX反転（必要な場合）
-        if (attackData.flipOnDirection && !isFacingRight)
+        if (attackData.followPlayerDirection &&
+            attackData.flipOnDirection &&
+            !isFacingRight)
         {
             var ls = hitBoxObj.transform.localScale;
             ls.x = -Mathf.Abs(ls.x);
@@ -280,18 +286,8 @@ public class AttackManager : MonoBehaviour
         Debug.Log($"{attackData.attackName} を実行 (ダメージ: {damage})");
     }
     
-    /// <summary>
-    /// IPlayerAttackをIPlayerDirectionに変換するアダプター
-    /// </summary>
-    private class PlayerAttackAdapter : IPlayerDirection
+    private bool IsFacingRight()
     {
-        private IPlayerAttack playerAttack;
-        
-        public PlayerAttackAdapter(IPlayerAttack playerAttack)
-        {
-            this.playerAttack = playerAttack;
-        }
-        
-        public bool IsFacingRight => playerAttack.isRight;
+        return playerAttack == null || playerAttack.isRight;
     }
 }

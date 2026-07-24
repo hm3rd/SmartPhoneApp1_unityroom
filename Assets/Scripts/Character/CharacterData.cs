@@ -31,6 +31,15 @@ public class CharacterData : ScriptableObject
     [Min(1)]
     [Tooltip("排出の重み。値が大きいほど出やすくなります")]
     public int gachaWeight = 100;
+
+    [Header("ホーム画面のセリフ")]
+    [Tooltip("ホーム画面でキャラクターをタッチした時のセリフ候補")]
+    public string[] homeTouchPhrases =
+    {
+        "やめてってば！",
+        "くすぐったいよ",
+        "びっくりした！"
+    };
     
     [Header("ステータス")]
     [Tooltip("最大HP")]

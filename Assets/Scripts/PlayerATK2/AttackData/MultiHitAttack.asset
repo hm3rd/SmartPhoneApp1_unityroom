@@ -9,17 +9,27 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4fbf8bd0d3c402a49b52da8bae62a73f, type: 3}
+  m_Script: {fileID: 11500000, guid: 9130b2aabfb8791468648f5a90311bf9, type: 3}
   m_Name: MultiHitAttack
   m_EditorClassIdentifier: 
   attackName: "\u901A\u5E38\u653B\u6483"
+  attackType: 1
   damage: 10
   cooldownTime: 0
   hitBoxPrefab: {fileID: 5509274092673679156, guid: 730b725bf9653b9438504b1468645d91, type: 3}
   duration: 0.2
   spawnDistance: 1
+  spawnOffset: {x: 0, y: 0}
   followPlayerDirection: 1
   flipOnDirection: 1
   scale: 1
+  scaleAxes: {x: 1, y: 1}
+  rotationZ: 0
   hitCount: 3
   hitInterval: 0.15
+  updateDirectionEachHit: 1
+  maxChargeTime: 2
+  minDamage: 10
+  maxDamage: 50
+  minScale: 0.5
+  maxScale: 2

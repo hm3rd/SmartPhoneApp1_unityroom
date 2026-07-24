@@ -3,6 +3,12 @@ using UnityEngine.UI; // Text 用（TextMeshProを使う場合は適宜差し替
 
 public class Character_behavior : MonoBehaviour
 {
+    private const string HomeCharacterIdKey = "SelectedCharacterId_0";
+
+    [Header("ホーム表示キャラクター")]
+    [Tooltip("ホーム画面に表示するSpriteRenderer。未設定なら同じオブジェクトから取得")]
+    [SerializeField] private SpriteRenderer homeCharacterRenderer;
+
     [Header("おさわり反応設定")]
     [Tooltip("タッチ時にランダム表示する台詞候補")]
     public string[] touchPhrases =
@@ -16,6 +22,20 @@ public class Character_behavior : MonoBehaviour
 
     [Tooltip("台詞を表示する Text (任意)")]
     public Text phraseText; // 未設定なら Debug.Log で出力
+
+    [Header("セリフ表示位置")]
+    [Tooltip("テキストの土台に使用する吹き出し画像")]
+    [SerializeField] private Sprite phraseBubbleSprite;
+
+    [Tooltip("吹き出し内のテキスト位置。Yをマイナスにすると下へ移動します")]
+    [SerializeField] private Vector2 phraseTextPositionOffset = new Vector2(0f, -15f);
+
+    private static readonly Vector2 PhraseBubblePadding = new Vector2(50f, 30f);
+    private const float PhraseBubbleMinWidth = 180f;
+    private const float PhraseBubbleMaxWidth = 520f;
+    private const float PhraseBubbleMinHeight = 80f;
+    private Image phraseBubbleImage;
+    private int displayedCharacterId = -1;
 
     [Header("アニメーション設定")]
     [Tooltip("アニメーションの継続秒数")]
@@ -63,6 +83,9 @@ public class Character_behavior : MonoBehaviour
 
     void Awake()
     {
+        ApplySelectedHomeCharacter();
+        EnsurePhraseBubble();
+
         _originalPos = transform.localPosition;
         _originalScale = transform.localScale;
         _originalRotation = transform.localRotation;
@@ -77,8 +100,155 @@ public class Character_behavior : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// StagePreparePanelの一番左（スロット0）で選択したキャラクターをホームへ反映。
+    /// </summary>
+    private void ApplySelectedHomeCharacter()
+    {
+        if (homeCharacterRenderer == null)
+        {
+            homeCharacterRenderer = GetComponent<SpriteRenderer>();
+        }
+
+        if (homeCharacterRenderer == null ||
+            !PlayerPrefs.HasKey(HomeCharacterIdKey))
+        {
+            return;
+        }
+
+        int characterId = PlayerPrefs.GetInt(HomeCharacterIdKey, -1);
+        displayedCharacterId = characterId;
+        CharacterDatabase database = CharacterDatabase.GetOrCreate();
+        CharacterData selectedCharacter = database.GetCharacterById(characterId);
+        if (selectedCharacter == null || selectedCharacter.characterSprite == null)
+        {
+            Debug.LogWarning($"ホーム表示用キャラクターID {characterId} が見つかりません。", this);
+            return;
+        }
+
+        homeCharacterRenderer.sprite = selectedCharacter.characterSprite;
+        gameObject.name = selectedCharacter.characterName;
+
+        if (selectedCharacter.homeTouchPhrases != null &&
+            selectedCharacter.homeTouchPhrases.Length > 0)
+        {
+            touchPhrases = selectedCharacter.homeTouchPhrases;
+        }
+    }
+
+    private void RefreshSelectedHomeCharacterIfChanged()
+    {
+        int selectedId = PlayerPrefs.GetInt(HomeCharacterIdKey, -1);
+        if (selectedId != displayedCharacterId)
+        {
+            ApplySelectedHomeCharacter();
+        }
+    }
+
+    /// <summary>
+    /// PhraseTextの背面に吹き出しImageを作り、Textをその子として前面表示する。
+    /// </summary>
+    private void EnsurePhraseBubble()
+    {
+        if (phraseText == null) return;
+
+        RectTransform textRect = phraseText.rectTransform;
+        if (phraseBubbleImage == null)
+        {
+            Transform originalParent = textRect.parent;
+            int originalSiblingIndex = textRect.GetSiblingIndex();
+
+            GameObject bubbleObject = new GameObject(
+                "PhraseBubble",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image));
+            bubbleObject.layer = phraseText.gameObject.layer;
+            bubbleObject.transform.SetParent(originalParent, false);
+            bubbleObject.transform.SetSiblingIndex(originalSiblingIndex);
+
+            RectTransform bubbleRect = bubbleObject.GetComponent<RectTransform>();
+            bubbleRect.anchorMin = textRect.anchorMin;
+            bubbleRect.anchorMax = textRect.anchorMax;
+            bubbleRect.pivot = textRect.pivot;
+            bubbleRect.anchoredPosition = textRect.anchoredPosition;
+            bubbleRect.sizeDelta = textRect.sizeDelta + PhraseBubblePadding;
+
+            phraseBubbleImage = bubbleObject.GetComponent<Image>();
+
+            textRect.SetParent(bubbleRect, false);
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.pivot = new Vector2(0.5f, 0.5f);
+            textRect.anchoredPosition = Vector2.zero;
+            textRect.sizeDelta = -PhraseBubblePadding;
+        }
+
+        phraseBubbleImage.sprite = phraseBubbleSprite;
+        phraseBubbleImage.color = Color.white;
+        phraseBubbleImage.type = phraseBubbleSprite != null
+            ? Image.Type.Sliced
+            : Image.Type.Simple;
+        phraseBubbleImage.raycastTarget = false;
+
+        phraseText.color = Color.black;
+        phraseText.raycastTarget = false;
+        phraseText.horizontalOverflow = HorizontalWrapMode.Wrap;
+        phraseText.verticalOverflow = VerticalWrapMode.Overflow;
+        phraseText.transform.SetAsLastSibling();
+        phraseBubbleImage.gameObject.SetActive(!string.IsNullOrEmpty(phraseText.text));
+
+        if (!string.IsNullOrEmpty(phraseText.text))
+        {
+            ResizePhraseBubble();
+        }
+    }
+
+    /// <summary>
+    /// セリフの推奨サイズを測り、吹き出しを文字量に合わせて伸縮する。
+    /// 最大幅を超えた文章は折り返し、高さを広げる。
+    /// </summary>
+    private void ResizePhraseBubble()
+    {
+        if (phraseText == null || phraseBubbleImage == null) return;
+
+        RectTransform bubbleRect = phraseBubbleImage.rectTransform;
+        RectTransform textRect = phraseText.rectTransform;
+
+        phraseBubbleImage.gameObject.SetActive(true);
+
+        float contentMaxWidth = Mathf.Max(
+            PhraseBubbleMinWidth,
+            PhraseBubbleMaxWidth - PhraseBubblePadding.x);
+        float preferredWidth = phraseText.preferredWidth;
+        float bubbleWidth = Mathf.Clamp(
+            preferredWidth + PhraseBubblePadding.x,
+            PhraseBubbleMinWidth,
+            PhraseBubbleMaxWidth);
+
+        // 幅を先に確定させてから、折り返し後の必要な高さを取得する
+        bubbleRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, bubbleWidth);
+        textRect.SetSizeWithCurrentAnchors(
+            RectTransform.Axis.Horizontal,
+            Mathf.Min(preferredWidth, contentMaxWidth));
+        Canvas.ForceUpdateCanvases();
+
+        float bubbleHeight = Mathf.Max(
+            PhraseBubbleMinHeight,
+            phraseText.preferredHeight + PhraseBubblePadding.y);
+        bubbleRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, bubbleHeight);
+
+        // Textは吹き出しの内側いっぱいに配置する
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.anchoredPosition = phraseTextPositionOffset;
+        textRect.sizeDelta = -PhraseBubblePadding;
+    }
+
     void Update()
     {
+        RefreshSelectedHomeCharacterIfChanged();
+
         // スマホタッチ
         if (Input.touchCount > 0)
         {
@@ -242,6 +412,10 @@ public class Character_behavior : MonoBehaviour
         if (phraseText != null)
         {
             phraseText.text = phrase;
+            if (phraseBubbleImage != null)
+            {
+                ResizePhraseBubble();
+            }
         }
         else
         {

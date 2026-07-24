@@ -21,6 +21,7 @@ public class CharacterDatabase : MonoBehaviour
     public List<CharacterData> characters = new List<CharacterData>();
 
     private readonly HashSet<int> ownedCharacterIds = new HashSet<int>();
+    private bool initialized;
 
     public CharacterCatalog Catalog => catalog;
 
@@ -34,7 +35,7 @@ public class CharacterDatabase : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        Initialize();
+        EnsureInitialized();
     }
 
     public static CharacterDatabase GetOrCreate()
@@ -47,14 +48,18 @@ public class CharacterDatabase : MonoBehaviour
         CharacterDatabase existing = FindFirstObjectByType<CharacterDatabase>();
         if (existing != null)
         {
+            existing.EnsureInitialized();
             return existing;
         }
 
         return new GameObject(nameof(CharacterDatabase)).AddComponent<CharacterDatabase>();
     }
 
-    private void Initialize()
+    private void EnsureInitialized()
     {
+        if (initialized) return;
+        initialized = true;
+
         if (catalog == null)
         {
             catalog = Resources.Load<CharacterCatalog>("CharacterCatalog");
