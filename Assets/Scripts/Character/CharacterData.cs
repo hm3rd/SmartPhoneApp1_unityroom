@@ -23,6 +23,14 @@ public class CharacterData : ScriptableObject
     
     // characterIconとして使用するプロパティ
     public Sprite characterIcon => characterSprite;
+
+    [Header("ガチャ設定")]
+    [Tooltip("ガチャの排出対象に含める")]
+    public bool canBeObtainedFromGacha = true;
+
+    [Min(1)]
+    [Tooltip("排出の重み。値が大きいほど出やすくなります")]
+    public int gachaWeight = 100;
     
     [Header("ステータス")]
     [Tooltip("最大HP")]
@@ -41,4 +49,9 @@ public class CharacterData : ScriptableObject
     
     [Tooltip("UI表示用の色")]
     public Color themeColor = Color.white;
+
+    private void OnValidate()
+    {
+        gachaWeight = Mathf.Max(1, gachaWeight);
+    }
 }

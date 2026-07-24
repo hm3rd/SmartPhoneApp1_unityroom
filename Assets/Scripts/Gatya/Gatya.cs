@@ -1,132 +1,386 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
+/// <summary>
+/// キャラクターガチャの抽選・石消費・獲得登録・結果演出を管理する。
+/// UI未設定時はGatyaSceneの既存ボタンを名前で取得し、結果パネルを自動生成する。
+/// </summary>
 public class Gatya : MonoBehaviour
 {
-    [Header("Rewards")]
-    [SerializeField] private List<GachaReward> rewardPool = new();
+    [System.Serializable]
+    public class CharacterResultEvent : UnityEvent<CharacterData> { }
 
-    [Header("Options")]
-    [SerializeField] private bool spawnRewardPrefab = true;
-    [SerializeField] private Transform rewardParent;
-    [SerializeField, Range(0.05f, 1f)] private float rollInterval = 0.15f;
-    [SerializeField, Range(0.05f, 1f)] private float introDelay = 0.25f;
+    public enum DuplicateMode
+    {
+        KeepAsOwned
+    }
 
-    [Header("Effects")]
-    [SerializeField] private ParticleSystem rollEffect;
-    [SerializeField] private AnimationCurve pulseCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    [Header("データ")]
+    [SerializeField] private CharacterCatalog catalog;
+    [SerializeField] private DuplicateMode duplicateMode = DuplicateMode.KeepAsOwned;
 
-    [Header("Events")]
+    [Header("価格")]
+    [Min(0)] [SerializeField] private int singleCost = 3;
+    [Min(0)] [SerializeField] private int tenPullCost = 30;
+
+    [Header("既存UI（未設定なら自動検索）")]
+    [SerializeField] private Button singlePullButton;
+    [SerializeField] private Button tenPullButton;
+    [SerializeField] private Text stoneText;
+    [SerializeField] private GameObject resultPanel;
+    [SerializeField] private Transform resultContainer;
+    [SerializeField] private Text messageText;
+
+    [Header("演出")]
+    [Min(0f)] [SerializeField] private float introDuration = 0.25f;
+    [Min(0f)] [SerializeField] private float characterInterval = 0.25f;
+
+    [Header("イベント")]
     [SerializeField] private UnityEvent onRollStarted;
     [SerializeField] private UnityEvent onRollFinished;
-    [SerializeField] private GachaRewardEvent onRewardPulled;
+    [SerializeField] private CharacterResultEvent onCharacterRevealed;
 
-    private bool _isRolling;
-    private readonly List<GachaReward> _lastResults = new();
+    private readonly List<CharacterData> lastResults = new List<CharacterData>();
+    private bool isRolling;
+    private Transform overlayRoot;
 
-    public IReadOnlyList<GachaReward> LastResults => _lastResults;
+    public IReadOnlyList<CharacterData> LastResults => lastResults;
+
+    private void Awake()
+    {
+        if (catalog == null)
+        {
+            catalog = Resources.Load<CharacterCatalog>("CharacterCatalog");
+        }
+
+        FindExistingButtons();
+        EnsureOverlayCanvas();
+        EnsureStoneUI();
+        EnsureResultUI();
+
+        if (singlePullButton != null) singlePullButton.onClick.AddListener(PullOnce);
+        if (tenPullButton != null) tenPullButton.onClick.AddListener(PullTen);
+    }
+
+    private void OnEnable()
+    {
+        PlayerStoneWallet.AmountChanged += RefreshStoneText;
+        RefreshStoneText(PlayerStoneWallet.Amount);
+    }
+
+    private void OnDisable()
+    {
+        PlayerStoneWallet.AmountChanged -= RefreshStoneText;
+    }
 
     public void PullOnce()
     {
-        StartCoroutine(RollRoutine(1));
+        TryStartRoll(1, singleCost);
     }
 
     public void PullTen()
     {
-        StartCoroutine(RollRoutine(10));
+        TryStartRoll(10, tenPullCost);
+    }
+
+    public void CloseResults()
+    {
+        if (!isRolling && resultPanel != null)
+        {
+            resultPanel.SetActive(false);
+        }
+    }
+
+    private void TryStartRoll(int count, int cost)
+    {
+        if (isRolling) return;
+
+        if (catalog == null || GetTotalWeight() <= 0)
+        {
+            ShowMessage("排出キャラクターが設定されていません");
+            return;
+        }
+
+        if (!PlayerStoneWallet.TrySpend(cost))
+        {
+            ShowMessage($"石が足りません（必要: {cost}）");
+            return;
+        }
+
+        StartCoroutine(RollRoutine(count));
     }
 
     private IEnumerator RollRoutine(int count)
     {
-        if (_isRolling)
-        {
-            yield break;
-        }
-
-        if (rewardPool.Count == 0)
-        {
-            Debug.LogWarning("Gatya: reward pool is empty.", this);
-            yield break;
-        }
-
-        _isRolling = true;
-        _lastResults.Clear();
-
+        isRolling = true;
+        lastResults.Clear();
+        SetButtonsInteractable(false);
+        ClearResultItems();
+        ConfigureResultGrid(count);
+        resultPanel.SetActive(true);
+        ShowMessage("召喚中...");
         onRollStarted?.Invoke();
-        rollEffect?.Play();
 
-        yield return PlayPulse(introDelay);
-
-        var totalWeight = rewardPool.Sum(r => Mathf.Max(1, r.weight));
-
-        for (var i = 0; i < count; i++)
+        if (introDuration > 0f)
         {
-            var reward = PullReward(totalWeight);
-            _lastResults.Add(reward);
-            onRewardPulled?.Invoke(reward);
-
-            if (spawnRewardPrefab && reward.prefab != null)
-            {
-                Instantiate(reward.prefab, rewardParent != null ? rewardParent : transform, false);
-            }
-
-            yield return new WaitForSeconds(rollInterval);
+            yield return new WaitForSeconds(introDuration);
         }
 
-        rollEffect?.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        messageText.text = string.Empty;
+        int totalWeight = GetTotalWeight();
+        CharacterDatabase ownedDatabase = CharacterDatabase.GetOrCreate();
+
+        for (int i = 0; i < count; i++)
+        {
+            CharacterData character = DrawCharacter(totalWeight);
+            if (character == null) continue;
+
+            lastResults.Add(character);
+            bool isNew = ownedDatabase.UnlockCharacter(character);
+            CreateResultItem(character, isNew, count);
+            onCharacterRevealed?.Invoke(character);
+
+            if (characterInterval > 0f && i < count - 1)
+            {
+                yield return new WaitForSeconds(characterInterval);
+            }
+        }
+
+        ShowMessage(count == 1 ? "獲得しました！" : "10回ガチャ結果");
         onRollFinished?.Invoke();
-        _isRolling = false;
+        isRolling = false;
+        SetButtonsInteractable(true);
     }
 
-    private IEnumerator PlayPulse(float duration)
+    private CharacterData DrawCharacter(int totalWeight)
     {
-        if (duration <= 0f)
+        int roll = Random.Range(0, totalWeight);
+        int accumulated = 0;
+        foreach (CharacterData character in catalog.allCharacters)
         {
-            yield break;
+            if (character == null || !character.canBeObtainedFromGacha) continue;
+            accumulated += Mathf.Max(1, character.gachaWeight);
+            if (roll < accumulated) return character;
         }
+        return null;
+    }
 
-        var original = transform.localScale;
-        var elapsed = 0f;
+    private int GetTotalWeight()
+    {
+        if (catalog == null) return 0;
+
+        int total = 0;
+        foreach (CharacterData character in catalog.allCharacters)
+        {
+            if (character != null && character.canBeObtainedFromGacha)
+            {
+                total += Mathf.Max(1, character.gachaWeight);
+            }
+        }
+        return total;
+    }
+
+    private void FindExistingButtons()
+    {
+        if (singlePullButton == null)
+        {
+            GameObject target = GameObject.Find("Gatya1");
+            if (target != null) singlePullButton = target.GetComponent<Button>();
+        }
+        if (tenPullButton == null)
+        {
+            GameObject target = GameObject.Find("Gatya10");
+            if (target != null) tenPullButton = target.GetComponent<Button>();
+        }
+    }
+
+    private void EnsureResultUI()
+    {
+        if (resultPanel != null && resultContainer != null && messageText != null) return;
+
+        resultPanel = new GameObject("GachaResultPanel", typeof(RectTransform), typeof(Image), typeof(Button));
+        resultPanel.transform.SetParent(overlayRoot, false);
+
+        RectTransform panelRect = resultPanel.GetComponent<RectTransform>();
+        panelRect.anchorMin = Vector2.zero;
+        panelRect.anchorMax = Vector2.one;
+        panelRect.offsetMin = Vector2.zero;
+        panelRect.offsetMax = Vector2.zero;
+        resultPanel.GetComponent<Image>().color = new Color(0.05f, 0.04f, 0.12f, 0.94f);
+        resultPanel.GetComponent<Button>().onClick.AddListener(CloseResults);
+
+        GameObject title = CreateTextObject("Message", resultPanel.transform, 34);
+        RectTransform titleRect = title.GetComponent<RectTransform>();
+        titleRect.anchorMin = new Vector2(0.1f, 0.82f);
+        titleRect.anchorMax = new Vector2(0.9f, 0.96f);
+        titleRect.offsetMin = titleRect.offsetMax = Vector2.zero;
+        messageText = title.GetComponent<Text>();
+
+        GameObject container = new GameObject("Results", typeof(RectTransform), typeof(GridLayoutGroup));
+        container.transform.SetParent(resultPanel.transform, false);
+        RectTransform containerRect = container.GetComponent<RectTransform>();
+        containerRect.anchorMin = new Vector2(0.08f, 0.12f);
+        containerRect.anchorMax = new Vector2(0.92f, 0.8f);
+        containerRect.offsetMin = containerRect.offsetMax = Vector2.zero;
+        GridLayoutGroup grid = container.GetComponent<GridLayoutGroup>();
+        grid.cellSize = new Vector2(120f, 150f);
+        grid.spacing = new Vector2(12f, 12f);
+        grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+        grid.constraintCount = 5;
+        grid.childAlignment = TextAnchor.MiddleCenter;
+        resultContainer = container.transform;
+
+        resultPanel.SetActive(false);
+    }
+
+    private void ConfigureResultGrid(int resultCount)
+    {
+        if (resultContainer == null) return;
+
+        GridLayoutGroup grid = resultContainer.GetComponent<GridLayoutGroup>();
+        if (grid == null) return;
+
+        if (resultCount == 1)
+        {
+            // 単発は画面中央に大きく表示
+            grid.cellSize = new Vector2(520f, 680f);
+            grid.spacing = Vector2.zero;
+            grid.constraintCount = 1;
+        }
+        else
+        {
+            // 10連は5列×2段。1080幅に収まる範囲で大きく表示
+            grid.cellSize = new Vector2(180f, 250f);
+            grid.spacing = new Vector2(14f, 18f);
+            grid.constraintCount = 5;
+        }
+    }
+
+    private void EnsureStoneUI()
+    {
+        if (stoneText != null) return;
+
+        GameObject stoneObject = CreateTextObject("StoneAmount", overlayRoot, 28);
+        RectTransform rect = stoneObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.68f, 0.9f);
+        rect.anchorMax = new Vector2(0.96f, 0.98f);
+        rect.offsetMin = rect.offsetMax = Vector2.zero;
+        stoneText = stoneObject.GetComponent<Text>();
+        stoneText.alignment = TextAnchor.MiddleRight;
+        stoneText.text = $"石: {PlayerStoneWallet.Amount}";
+    }
+
+    /// <summary>
+    /// 既存のガチャCanvasはWorld Spaceなので、演出だけを画面座標のCanvasへ分離する。
+    /// </summary>
+    private void EnsureOverlayCanvas()
+    {
+        if (overlayRoot != null) return;
+
+        GameObject canvasObject = new GameObject(
+            "GachaOverlayCanvas",
+            typeof(RectTransform),
+            typeof(Canvas),
+            typeof(CanvasScaler),
+            typeof(GraphicRaycaster));
+
+        Canvas overlayCanvas = canvasObject.GetComponent<Canvas>();
+        overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        overlayCanvas.sortingOrder = 100;
+
+        CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1080f, 1920f);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        scaler.matchWidthOrHeight = 0.5f;
+
+        overlayRoot = canvasObject.transform;
+    }
+
+    private void CreateResultItem(CharacterData character, bool isNew, int resultCount)
+    {
+        GameObject item = new GameObject(character.characterName, typeof(RectTransform), typeof(Image));
+        item.transform.SetParent(resultContainer, false);
+        item.GetComponent<Image>().color = character.themeColor * new Color(1f, 1f, 1f, 0.7f);
+
+        GameObject iconObject = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+        iconObject.transform.SetParent(item.transform, false);
+        RectTransform iconRect = iconObject.GetComponent<RectTransform>();
+        iconRect.anchorMin = new Vector2(0.08f, 0.25f);
+        iconRect.anchorMax = new Vector2(0.92f, 0.95f);
+        iconRect.offsetMin = iconRect.offsetMax = Vector2.zero;
+        Image icon = iconObject.GetComponent<Image>();
+        icon.sprite = character.characterIcon;
+        icon.preserveAspect = true;
+
+        GameObject label = CreateTextObject("Name", item.transform, resultCount == 1 ? 24 : 15);
+        RectTransform labelRect = label.GetComponent<RectTransform>();
+        labelRect.anchorMin = new Vector2(0.02f, 0.02f);
+        labelRect.anchorMax = new Vector2(0.98f, 0.25f);
+        labelRect.offsetMin = labelRect.offsetMax = Vector2.zero;
+        label.GetComponent<Text>().text = isNew
+            ? $"NEW! {character.characterName}"
+            : character.characterName;
+
+        StartCoroutine(RevealItem(item.transform));
+    }
+
+    private IEnumerator RevealItem(Transform item)
+    {
+        const float duration = 0.2f;
+        float elapsed = 0f;
+        item.localScale = Vector3.zero;
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            var t = Mathf.Clamp01(elapsed / duration);
-            var strength = 1f + 0.08f * (pulseCurve != null ? pulseCurve.Evaluate(t) : Mathf.Sin(t * Mathf.PI));
-            transform.localScale = original * strength;
+            float value = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+            item.localScale = Vector3.one * value;
             yield return null;
         }
-
-        transform.localScale = original;
+        item.localScale = Vector3.one;
     }
 
-    private GachaReward PullReward(int totalWeight)
+    private static GameObject CreateTextObject(string name, Transform parent, int fontSize)
     {
-        var roll = Random.Range(0, totalWeight);
-        var accumulator = 0;
-        for (var i = 0; i < rewardPool.Count; i++)
+        GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
+        textObject.transform.SetParent(parent, false);
+        Text text = textObject.GetComponent<Text>();
+        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.fontSize = fontSize;
+        text.alignment = TextAnchor.MiddleCenter;
+        text.color = Color.white;
+        text.horizontalOverflow = HorizontalWrapMode.Wrap;
+        text.verticalOverflow = VerticalWrapMode.Overflow;
+        return textObject;
+    }
+
+    private void ClearResultItems()
+    {
+        if (resultContainer == null) return;
+        foreach (Transform child in resultContainer)
         {
-            accumulator += Mathf.Max(1, rewardPool[i].weight);
-            if (roll < accumulator)
-            {
-                return rewardPool[i];
-            }
+            Destroy(child.gameObject);
         }
-
-        return rewardPool[rewardPool.Count - 1];
     }
 
-    [System.Serializable]
-    public class GachaReward
+    private void ShowMessage(string message)
     {
-        public string name;
-        public Sprite icon;
-        public GameObject prefab;
-        public int weight = 1;
+        EnsureResultUI();
+        resultPanel.SetActive(true);
+        messageText.text = message;
     }
 
-    [System.Serializable]
-    private class GachaRewardEvent : UnityEvent<GachaReward> { }
+    private void RefreshStoneText(int amount)
+    {
+        if (stoneText != null) stoneText.text = $"石: {amount}";
+    }
+
+    private void SetButtonsInteractable(bool interactable)
+    {
+        if (singlePullButton != null) singlePullButton.interactable = interactable;
+        if (tenPullButton != null) tenPullButton.interactable = interactable;
+    }
 }

@@ -166,8 +166,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   m_Material: {fileID: 0}
   m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
   m_RaycastTarget: 1
@@ -768,6 +768,7 @@ GameObject:
   - component: {fileID: 203363283}
   - component: {fileID: 203363285}
   - component: {fileID: 203363284}
+  - component: {fileID: 203363286}
   m_Layer: 5
   m_Name: Stone
   m_TagString: Untagged
@@ -836,6 +837,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 203363282}
   m_CullTransparentMesh: 1
+--- !u!114 &203363286
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 203363282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31d2225ede4842918de1dd51158d3dbd, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  legacyText: {fileID: 203363284}
+  tmpText: {fileID: 0}
+  prefix:
 --- !u!1 &226702321
 GameObject:
   m_ObjectHideFlags: 0
@@ -865,8 +881,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
@@ -1115,50 +1131,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 255482337}
   m_CullTransparentMesh: 1
---- !u!1 &257777487
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 257777489}
-  - component: {fileID: 257777488}
-  m_Layer: 0
-  m_Name: CharacterManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &257777488
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 257777487}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5da212e769bad264297283d295c18358, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!4 &257777489
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 257777487}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1138.3275, y: 538.4375, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &299706132
 GameObject:
   m_ObjectHideFlags: 0
@@ -1422,7 +1394,6 @@ GameObject:
   - component: {fileID: 319615512}
   - component: {fileID: 319615511}
   - component: {fileID: 319615510}
-  - component: {fileID: 319615513}
   m_Layer: 5
   m_Name: Stage3
   m_TagString: Untagged
@@ -1494,7 +1465,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 319615513}
+      - m_Target: {fileID: 598913615}
         m_TargetAssemblyTypeName: StageSelectManager, Assembly-CSharp
         m_MethodName: SelectStage
         m_Mode: 3
@@ -1544,21 +1515,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 319615508}
   m_CullTransparentMesh: 1
---- !u!114 &319615513
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 319615508}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9fe94ae795b2c664a949bbd14153ecb0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  preparationPanel: {fileID: 722215988}
-  readyButton: {fileID: 200037844}
-  stageInfoText: {fileID: 0}
 --- !u!1 &339468657
 GameObject:
   m_ObjectHideFlags: 0
@@ -2183,6 +2139,60 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 408336802}
   m_CullTransparentMesh: 1
+--- !u!1 &598913614
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 598913616}
+  - component: {fileID: 598913615}
+  m_Layer: 0
+  m_Name: StageSelectManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &598913615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 598913614}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fe94ae795b2c664a949bbd14153ecb0, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  preparationPanel: {fileID: 722215988}
+  readyButton: {fileID: 200037844}
+  stageInfoText: {fileID: 0}
+  stageRewards:
+  - stageIndex: 0
+    stoneReward: 10
+  - stageIndex: 1
+    stoneReward: 20
+  - stageIndex: 2
+    stoneReward: 30
+--- !u!4 &598913616
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 598913614}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.4899623, y: -0.34640408, z: -0.06517352}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &605860739
 GameObject:
   m_ObjectHideFlags: 0
@@ -4057,6 +4067,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46ecc681aaac4fc4c886d873279795b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  catalog: {fileID: 11400000, guid: 68ee5269040344d4952614da4903c208, type: 2}
   characters:
   - {fileID: 11400000, guid: 9ffe912eab2f71f4a9fb4944f3b5c669, type: 2}
   - {fileID: 11400000, guid: ff9f876fe9b7a914a9789f0d133f382f, type: 2}
@@ -5027,7 +5038,6 @@ GameObject:
   - component: {fileID: 1644608935}
   - component: {fileID: 1644608934}
   - component: {fileID: 1644608933}
-  - component: {fileID: 1644608937}
   - component: {fileID: 1644608936}
   m_Layer: 5
   m_Name: Stage1
@@ -5100,7 +5110,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1644608937}
+      - m_Target: {fileID: 598913615}
         m_TargetAssemblyTypeName: StageSelectManager, Assembly-CSharp
         m_MethodName: SelectStage
         m_Mode: 3
@@ -5162,21 +5172,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c31a242202228f4b9b4a64fb92a20ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1644608937
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1644608931}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9fe94ae795b2c664a949bbd14153ecb0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  preparationPanel: {fileID: 722215988}
-  readyButton: {fileID: 200037844}
-  stageInfoText: {fileID: 0}
 --- !u!1 &1680767662
 GameObject:
   m_ObjectHideFlags: 0
@@ -6242,7 +6237,6 @@ GameObject:
   - component: {fileID: 2088241413}
   - component: {fileID: 2088241412}
   - component: {fileID: 2088241411}
-  - component: {fileID: 2088241414}
   m_Layer: 5
   m_Name: Stage2
   m_TagString: Untagged
@@ -6314,7 +6308,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 2088241414}
+      - m_Target: {fileID: 598913615}
         m_TargetAssemblyTypeName: StageSelectManager, Assembly-CSharp
         m_MethodName: SelectStage
         m_Mode: 3
@@ -6364,21 +6358,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2088241409}
   m_CullTransparentMesh: 1
---- !u!114 &2088241414
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2088241409}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9fe94ae795b2c664a949bbd14153ecb0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  preparationPanel: {fileID: 722215988}
-  readyButton: {fileID: 200037844}
-  stageInfoText: {fileID: 0}
 --- !u!1 &2114478036
 GameObject:
   m_ObjectHideFlags: 0
@@ -6776,9 +6755,9 @@ SceneRoots:
   - {fileID: 300541284}
   - {fileID: 1021397985}
   - {fileID: 2054464892}
-  - {fileID: 257777489}
   - {fileID: 1144295761}
   - {fileID: 1623004100}
   - {fileID: 7821096628004927727}
   - {fileID: 1149682548}
   - {fileID: 1909255454}
+  - {fileID: 598913616}

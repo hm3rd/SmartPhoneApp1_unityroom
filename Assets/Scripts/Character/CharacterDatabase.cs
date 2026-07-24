@@ -1,75 +1,167 @@
-using UnityEngine;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 /// <summary>
-/// ゲーム内で使用するキャラクターデータを管理します
-/// Inspector からキャラクターを作成・編集できます
+/// 獲得済みキャラクターを管理・保存するランタイムDB。
+/// 全キャラクターの定義は CharacterCatalog が担当する。
 /// </summary>
 public class CharacterDatabase : MonoBehaviour
 {
+    private const string OwnedIdsKey = "OwnedCharacterIds_v1";
+
     public static CharacterDatabase Instance { get; private set; }
-    
-    [Header("作成済みキャラクター")]
-    [Tooltip("ゲーム内で使用するキャラクターのリスト")]
+
+    [Header("全キャラクターカタログ")]
+    [SerializeField] private CharacterCatalog catalog;
+
+    [Header("獲得済みキャラクター（実行時に構築）")]
+    [Tooltip("既存Sceneとの互換用。初回起動時は、ここに登録済みのキャラも初期所持になります。")]
     public List<CharacterData> characters = new List<CharacterData>();
-    
-    void Awake()
+
+    private readonly HashSet<int> ownedCharacterIds = new HashSet<int>();
+
+    public CharacterCatalog Catalog => catalog;
+
+    private void Awake()
     {
-        // シングルトン設定
-        if (Instance == null)
+        if (Instance != null && Instance != this)
         {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+        Initialize();
+    }
+
+    public static CharacterDatabase GetOrCreate()
+    {
+        if (Instance != null)
+        {
+            return Instance;
+        }
+
+        CharacterDatabase existing = FindFirstObjectByType<CharacterDatabase>();
+        if (existing != null)
+        {
+            return existing;
+        }
+
+        return new GameObject(nameof(CharacterDatabase)).AddComponent<CharacterDatabase>();
+    }
+
+    private void Initialize()
+    {
+        if (catalog == null)
+        {
+            catalog = Resources.Load<CharacterCatalog>("CharacterCatalog");
+        }
+
+        List<CharacterData> legacyCharacters = characters
+            .Where(character => character != null)
+            .ToList();
+
+        if (PlayerPrefs.HasKey(OwnedIdsKey))
+        {
+            LoadOwnedIds();
         }
         else
         {
-            Destroy(gameObject);
+            IEnumerable<CharacterData> starters =
+                catalog != null && catalog.initialCharacters.Count > 0
+                    ? catalog.initialCharacters
+                    : legacyCharacters;
+
+            foreach (CharacterData character in starters)
+            {
+                if (character != null)
+                {
+                    ownedCharacterIds.Add(character.characterId);
+                }
+            }
+            SaveOwnedIds();
         }
+
+        RebuildOwnedCharacters(legacyCharacters);
     }
-    
-    /// <summary>
-    /// 指定番号のキャラクターを取得
-    /// </summary>
+
+    public bool UnlockCharacter(CharacterData character)
+    {
+        if (character == null || !ownedCharacterIds.Add(character.characterId))
+        {
+            return false;
+        }
+
+        SaveOwnedIds();
+        RebuildOwnedCharacters();
+        return true;
+    }
+
+    public bool IsOwned(int characterId)
+    {
+        return ownedCharacterIds.Contains(characterId);
+    }
+
     public CharacterData GetCharacter(int index)
     {
         if (index < 0 || index >= characters.Count)
         {
-            Debug.LogWarning($"キャラクターインデックス {index} は無効です");
             return null;
         }
         return characters[index];
     }
-    
-    /// <summary>
-    /// キャラクター名で検索
-    /// </summary>
+
     public CharacterData GetCharacterByName(string name)
     {
-        return characters.Find(c => c.characterName == name);
+        return characters.Find(character => character != null && character.characterName == name);
     }
-    
-    /// <summary>
-    /// キャラクターIDで検索
-    /// </summary>
+
     public CharacterData GetCharacterById(int id)
     {
-        return characters.Find(c => c.characterId == id);
+        return characters.Find(character => character != null && character.characterId == id);
     }
-    
-    /// <summary>
-    /// キャラクターIDからアイコンを取得
-    /// </summary>
+
     public Sprite GetCharacterIconById(int id)
     {
-        CharacterData character = GetCharacterById(id);
-        return character?.characterIcon;
+        return GetCharacterById(id)?.characterIcon;
     }
-    
-    /// <summary>
-    /// 全キャラクター数を取得
-    /// </summary>
+
     public int GetCharacterCount()
     {
         return characters.Count;
+    }
+
+    private void RebuildOwnedCharacters(IEnumerable<CharacterData> fallback = null)
+    {
+        IEnumerable<CharacterData> source =
+            catalog != null ? catalog.allCharacters : fallback ?? characters;
+
+        characters = source
+            .Where(character => character != null && ownedCharacterIds.Contains(character.characterId))
+            .GroupBy(character => character.characterId)
+            .Select(group => group.First())
+            .ToList();
+    }
+
+    private void LoadOwnedIds()
+    {
+        ownedCharacterIds.Clear();
+        string saved = PlayerPrefs.GetString(OwnedIdsKey, string.Empty);
+        foreach (string value in saved.Split(','))
+        {
+            if (int.TryParse(value, out int id))
+            {
+                ownedCharacterIds.Add(id);
+            }
+        }
+    }
+
+    private void SaveOwnedIds()
+    {
+        PlayerPrefs.SetString(OwnedIdsKey, string.Join(",", ownedCharacterIds.OrderBy(id => id)));
+        PlayerPrefs.Save();
     }
 }

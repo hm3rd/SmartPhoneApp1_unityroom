@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
@@ -17,11 +18,14 @@ public class AttackManager : MonoBehaviour
     
     // クールタイム管理（攻撃データごとに残り時間を記録）
     private Dictionary<AttackData, float> cooldownTimers = new Dictionary<AttackData, float>();
+
+    // 多段攻撃は最後の一撃までクールタイムが始まらないため、実行中を別に管理する
+    private readonly HashSet<AttackData> attacksInProgress = new HashSet<AttackData>();
     
     // プレイヤーの向き情報
     private IPlayerDirection playerDirection;
     
-    void Awake()
+    private void Awake()
     {
         if (playerTransform == null)
         {
@@ -56,6 +60,10 @@ public class AttackManager : MonoBehaviour
     /// </summary>
     public void SetAvailableAttacks(List<AttackData> newAttacks)
     {
+        // キャラクター交代前の多段攻撃を残さない
+        StopAllCoroutines();
+        attacksInProgress.Clear();
+
         availableAttacks = newAttacks ?? new List<AttackData>();
         cooldownTimers.Clear();
 
@@ -68,7 +76,7 @@ public class AttackManager : MonoBehaviour
         }
     }
     
-    void Update()
+    private void Update()
     {
         // クールタイムを減らす
         var keys = new List<AttackData>(cooldownTimers.Keys);
@@ -76,7 +84,7 @@ public class AttackManager : MonoBehaviour
         {
             if (cooldownTimers[attack] > 0f)
             {
-                cooldownTimers[attack] -= Time.deltaTime;
+                cooldownTimers[attack] = Mathf.Max(0f, cooldownTimers[attack] - Time.deltaTime);
             }
         }
     }
@@ -85,39 +93,88 @@ public class AttackManager : MonoBehaviour
     /// 指定した攻撃を実行
     /// </summary>
     /// <param name="attackIndex">攻撃のインデックス（availableAttacksリストの番号）</param>
-    public void ExecuteAttack(int attackIndex)
+    public bool ExecuteAttack(int attackIndex)
     {
         if (attackIndex < 0 || attackIndex >= availableAttacks.Count)
         {
             Debug.LogWarning($"無効な攻撃インデックス: {attackIndex}");
-            return;
+            return false;
         }
         
-        ExecuteAttack(availableAttacks[attackIndex]);
+        return ExecuteAttack(availableAttacks[attackIndex]);
     }
     
     /// <summary>
     /// 指定した攻撃データで攻撃を実行
     /// </summary>
-    public void ExecuteAttack(AttackData attackData)
+    public bool ExecuteAttack(AttackData attackData)
     {
         if (attackData == null)
         {
             Debug.LogWarning("攻撃データがnullです");
-            return;
+            return false;
         }
         
-        // クールタイム中かチェック
-        if (IsOnCooldown(attackData))
+        if (IsOnCooldown(attackData) || attacksInProgress.Contains(attackData))
         {
             Debug.Log($"{attackData.attackName} はクールタイム中です");
-            return;
+            return false;
         }
-        
-        // 攻撃を生成
-        SpawnAttack(attackData);
-        
-        // クールタイム開始
+
+        if (attackData is ChargeAttackData)
+        {
+            // チャージ攻撃はボタンを離した時に ExecuteChargedAttack から実行する
+            return false;
+        }
+
+        if (attackData is MultiHitAttackData multiHit)
+        {
+            StartCoroutine(ExecuteMultiHit(multiHit));
+        }
+        else
+        {
+            SpawnAttack(attackData, attackData.damage, attackData.scale);
+            StartCooldown(attackData);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// チャージ時間から威力を計算して攻撃する。
+    /// </summary>
+    public bool ExecuteChargedAttack(ChargeAttackData attackData, float chargeTime)
+    {
+        if (attackData == null || IsOnCooldown(attackData) || attacksInProgress.Contains(attackData))
+        {
+            return false;
+        }
+
+        float maxTime = Mathf.Max(0.01f, attackData.maxChargeTime);
+        float ratio = Mathf.Clamp01(chargeTime / maxTime);
+        int damage = Mathf.RoundToInt(Mathf.Lerp(attackData.minDamage, attackData.maxDamage, ratio));
+        float scale = Mathf.Lerp(attackData.minScale, attackData.maxScale, ratio);
+
+        SpawnAttack(attackData, damage, scale);
+        StartCooldown(attackData);
+        return true;
+    }
+
+    private IEnumerator ExecuteMultiHit(MultiHitAttackData attackData)
+    {
+        attacksInProgress.Add(attackData);
+
+        int hitCount = Mathf.Max(1, attackData.hitCount);
+        for (int i = 0; i < hitCount; i++)
+        {
+            SpawnAttack(attackData, attackData.damage, attackData.scale);
+            if (i < hitCount - 1)
+            {
+                yield return new WaitForSeconds(Mathf.Max(0f, attackData.hitInterval));
+            }
+        }
+
+        attacksInProgress.Remove(attackData);
         StartCooldown(attackData);
     }
     
@@ -126,6 +183,11 @@ public class AttackManager : MonoBehaviour
     /// </summary>
     public bool IsOnCooldown(AttackData attackData)
     {
+        if (attackData == null)
+        {
+            return false;
+        }
+
         if (!cooldownTimers.ContainsKey(attackData))
         {
             cooldownTimers[attackData] = 0f;
@@ -164,13 +226,16 @@ public class AttackManager : MonoBehaviour
     /// </summary>
     public void StartCooldown(AttackData attackData)
     {
-        cooldownTimers[attackData] = attackData.cooldownTime;
+        if (attackData != null)
+        {
+            cooldownTimers[attackData] = Mathf.Max(0f, attackData.cooldownTime);
+        }
     }
     
     /// <summary>
     /// 攻撃を生成
     /// </summary>
-    private void SpawnAttack(AttackData attackData)
+    private void SpawnAttack(AttackData attackData, int damage, float scale)
     {
         if (attackData.hitBoxPrefab == null)
         {
@@ -193,10 +258,7 @@ public class AttackManager : MonoBehaviour
         GameObject hitBoxObj = Instantiate(attackData.hitBoxPrefab, spawnPosition, Quaternion.identity);
         
         // スケール設定
-        if (attackData.scale != 1.0f)
-        {
-            hitBoxObj.transform.localScale = Vector3.one * attackData.scale;
-        }
+        hitBoxObj.transform.localScale = Vector3.one * Mathf.Max(0f, scale);
         // 左向きならX反転（必要な場合）
         if (attackData.flipOnDirection && !isFacingRight)
         {
@@ -209,13 +271,13 @@ public class AttackManager : MonoBehaviour
         HitBox hitBox = hitBoxObj.GetComponent<HitBox>();
         if (hitBox != null)
         {
-            hitBox.SetDamage(attackData.damage);
+            hitBox.SetDamage(Mathf.Max(0, damage));
         }
         
         // 持続時間後に削除
-        Destroy(hitBoxObj, attackData.duration);
+        Destroy(hitBoxObj, Mathf.Max(0f, attackData.duration));
         
-        Debug.Log($"{attackData.attackName} を実行 (ダメージ: {attackData.damage})");
+        Debug.Log($"{attackData.attackName} を実行 (ダメージ: {damage})");
     }
     
     /// <summary>

@@ -38,4 +38,13 @@ public class AttackData : ScriptableObject
     [Header("特殊設定")]
     [Tooltip("攻撃のスケール倍率")]
     public float scale = 1.0f;
+
+    protected virtual void OnValidate()
+    {
+        damage = Mathf.Max(0, damage);
+        cooldownTime = Mathf.Max(0f, cooldownTime);
+        duration = Mathf.Max(0f, duration);
+        spawnDistance = Mathf.Max(0f, spawnDistance);
+        scale = Mathf.Max(0f, scale);
+    }
 }

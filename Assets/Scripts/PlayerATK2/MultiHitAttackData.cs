@@ -12,4 +12,11 @@ public class MultiHitAttackData : AttackData
     
     [Tooltip("各攻撃の間隔（秒）")]
     public float hitInterval = 0.15f;
+
+    protected override void OnValidate()
+    {
+        base.OnValidate();
+        hitCount = Mathf.Max(1, hitCount);
+        hitInterval = Mathf.Max(0f, hitInterval);
+    }
 }

@@ -39,6 +39,7 @@ public class NewStageManager : MonoBehaviour
     private float nextSpawnTime = 1f;
     private bool isSubStageCleared = false;
     private bool isStageCleared = false;
+    private bool clearRewardGranted = false;
 
     void Start()
     {
@@ -85,7 +86,7 @@ public class NewStageManager : MonoBehaviour
             }
             else
             {
-                isStageCleared = true;
+                CompleteStage();
                 if (debugLogs)
                 {
                     Debug.Log("[Stage] All sub-stages cleared. Stage complete.");
@@ -158,11 +159,7 @@ public class NewStageManager : MonoBehaviour
             bool isLastSubStage = (currentSubStage >= targetStage.subStages.Length - 1);
             if (isLastSubStage)
             {
-                isStageCleared = true;
-                if (resultPanel != null)
-                {
-                    resultPanel.SetActive(true);
-                }
+                CompleteStage();
                 if (debugLogs)
                 {
                     Debug.Log("[Stage] Final sub-stage cleared. Result panel shown.");
@@ -175,6 +172,30 @@ public class NewStageManager : MonoBehaviour
                     Debug.Log("[Stage] Sub-stage cleared. Move to edge to proceed.");
                 }
             }
+        }
+    }
+
+    private void CompleteStage()
+    {
+        isStageCleared = true;
+        if (resultPanel != null)
+        {
+            resultPanel.SetActive(true);
+        }
+
+        if (clearRewardGranted) return;
+
+        int reward = Mathf.Max(
+            0,
+            PlayerPrefs.GetInt(StageSelectManager.PendingStoneRewardKey, 0));
+        PlayerStoneWallet.Add(reward);
+        PlayerPrefs.DeleteKey(StageSelectManager.PendingStoneRewardKey);
+        PlayerPrefs.Save();
+        clearRewardGranted = true;
+
+        if (debugLogs)
+        {
+            Debug.Log($"[Stage] クリア報酬として石を{reward}個獲得しました。");
         }
     }
 

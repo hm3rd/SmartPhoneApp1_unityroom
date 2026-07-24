@@ -203,8 +203,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   m_Navigation:
     m_Mode: 3
     m_WrapAround: 0
@@ -425,6 +425,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetPanel: {fileID: 0}
+  keepCurrentStateOnStart: 0
+  restorePreparationPanelState: 0
 --- !u!1 &383920796
 GameObject:
   m_ObjectHideFlags: 0
@@ -549,6 +551,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetPanel: {fileID: 0}
+  keepCurrentStateOnStart: 0
+  restorePreparationPanelState: 0
 --- !u!1 &732649233
 GameObject:
   m_ObjectHideFlags: 0
@@ -710,19 +714,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 814820207}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: LoadScene, Assembly-CSharp
-        m_MethodName: LoadTargetScene
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &814820207
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -843,19 +835,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1114007098}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: LoadScene, Assembly-CSharp
-        m_MethodName: LoadTargetScene
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1114007098
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1225,6 +1205,7 @@ GameObject:
   - component: {fileID: 1788397081}
   - component: {fileID: 1788397080}
   - component: {fileID: 1788397079}
+  - component: {fileID: 1788397083}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -1318,6 +1299,39 @@ RectTransform:
   m_AnchoredPosition: {x: 480, y: 270}
   m_SizeDelta: {x: 960, y: 540}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1788397083
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1788397078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a7b243f7dbcd7142bfe718c5830885c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  catalog: {fileID: 11400000, guid: 68ee5269040344d4952614da4903c208, type: 2}
+  duplicateMode: 0
+  singleCost: 3
+  tenPullCost: 30
+  singlePullButton: {fileID: 1114007097}
+  tenPullButton: {fileID: 814820206}
+  stoneText: {fileID: 0}
+  resultPanel: {fileID: 0}
+  resultContainer: {fileID: 0}
+  messageText: {fileID: 0}
+  introDuration: 0.25
+  characterInterval: 0.25
+  onRollStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onRollFinished:
+    m_PersistentCalls:
+      m_Calls: []
+  onCharacterRevealed:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &2010606621
 GameObject:
   m_ObjectHideFlags: 0
@@ -1442,6 +1456,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetPanel: {fileID: 0}
+  keepCurrentStateOnStart: 0
+  restorePreparationPanelState: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

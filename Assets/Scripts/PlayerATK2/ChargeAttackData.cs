@@ -21,4 +21,14 @@ public class ChargeAttackData : AttackData
     
     [Tooltip("最大スケール")]
     public float maxScale = 2.0f;
+
+    protected override void OnValidate()
+    {
+        base.OnValidate();
+        maxChargeTime = Mathf.Max(0.01f, maxChargeTime);
+        minDamage = Mathf.Max(0, minDamage);
+        maxDamage = Mathf.Max(minDamage, maxDamage);
+        minScale = Mathf.Max(0f, minScale);
+        maxScale = Mathf.Max(minScale, maxScale);
+    }
 }

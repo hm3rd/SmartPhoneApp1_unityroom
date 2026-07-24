@@ -34,16 +34,7 @@ public class CharacterListDisplay : MonoBehaviour
         Debug.Log("DisplayCharacters() 開始");
         
         // CharacterDatabase確認（複数の方法で検索）
-        CharacterDatabase db = CharacterDatabase.Instance;
-        if (db == null)
-        {
-            // Instance が null の場合、シーン内を検索
-            db = FindObjectOfType<CharacterDatabase>();
-            if (db != null)
-            {
-                Debug.LogWarning("CharacterDatabase.Instance が null でしたが、FindObjectOfType で見つかりました。");
-            }
-        }
+        CharacterDatabase db = CharacterDatabase.GetOrCreate();
         
         if (db == null)
         {
