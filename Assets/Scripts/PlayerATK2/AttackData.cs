@@ -12,7 +12,8 @@ public class AttackData : ScriptableObject
         Normal,
         MultiHit,
         Charge,
-        Projectile
+        Projectile,
+        Dash
     }
 
     [Header("基本情報")]
@@ -86,6 +87,18 @@ public class AttackData : ScriptableObject
     [Tooltip("画面端から削除位置までの余白（Viewport基準）")]
     public float offScreenMargin = 0.05f;
 
+    [Header("突進攻撃")]
+    [Min(0f)]
+    [Tooltip("キャラクターが前方へ移動する距離")]
+    public float dashDistance = 4f;
+
+    [Min(0.01f)]
+    [Tooltip("突進にかける時間。小さいほど高速になります")]
+    public float dashDuration = 0.3f;
+
+    [Tooltip("突進中に敵からのダメージを受けないようにします")]
+    public bool invincibleDuringDash = true;
+
     [Header("多段攻撃")]
     [Min(1)] public int hitCount = 3;
     [Min(0f)] public float hitInterval = 0.15f;
@@ -114,6 +127,8 @@ public class AttackData : ScriptableObject
         projectileSpeed = Mathf.Max(0f, projectileSpeed);
         projectileLifetime = Mathf.Max(0.01f, projectileLifetime);
         offScreenMargin = Mathf.Max(0f, offScreenMargin);
+        dashDistance = Mathf.Max(0f, dashDistance);
+        dashDuration = Mathf.Max(0.01f, dashDuration);
 
         hitCount = Mathf.Max(1, hitCount);
         hitInterval = Mathf.Max(0f, hitInterval);

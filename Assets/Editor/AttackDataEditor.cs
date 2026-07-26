@@ -22,7 +22,8 @@ public class AttackDataEditor : Editor
             DrawSection("ダメージ・クールタイム", "damage", "cooldownTime");
         }
 
-        if (type == AttackData.AttackType.Projectile)
+        if (type == AttackData.AttackType.Projectile ||
+            type == AttackData.AttackType.Dash)
         {
             DrawSection("攻撃判定", "hitBoxPrefab");
         }
@@ -75,6 +76,17 @@ public class AttackDataEditor : Editor
                 "offScreenMargin");
             EditorGUILayout.HelpBox(
                 "Projectile Lifetimeは画面外削除ができない場合の安全用最大寿命です。",
+                MessageType.Info);
+        }
+        else if (type == AttackData.AttackType.Dash)
+        {
+            DrawSection(
+                "突進攻撃",
+                "dashDistance",
+                "dashDuration",
+                "invincibleDuringDash");
+            EditorGUILayout.HelpBox(
+                "Hit Box Prefabは突進中プレイヤーへ追従し、通過した敵へ1回ずつダメージを与えます。",
                 MessageType.Info);
         }
 

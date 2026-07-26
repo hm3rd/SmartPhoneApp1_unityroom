@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 /// <summary>
 /// 攻撃のヒットボックス
@@ -12,6 +13,7 @@ public class HitBox : MonoBehaviour
     private float knockbackDistance;
     private float knockbackDuration = 0.15f;
     private bool destroyOnHit;
+    private readonly HashSet<int> damagedEnemies = new HashSet<int>();
     
     /// <summary>
     /// ダメージを設定
@@ -44,6 +46,14 @@ public class HitBox : MonoBehaviour
         if (other.CompareTag("Enemy"))
         {
             EnemyHP enemyHP = other.GetComponentInParent<EnemyHP>();
+            GameObject enemyObject = enemyHP != null
+                ? enemyHP.gameObject
+                : other.transform.root.gameObject;
+            if (!damagedEnemies.Add(enemyObject.GetInstanceID()))
+            {
+                return;
+            }
+
             if (enemyHP != null)
             {
                 enemyHP.TakeDamage(damage);

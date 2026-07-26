@@ -79,7 +79,8 @@ public class EnemyMove : MonoBehaviour
     {
         if (player == null ||
             solidCollider == null ||
-            playerSolidCollider == null)
+            playerSolidCollider == null ||
+            !playerSolidCollider.enabled)
         {
             return nextPosition;
         }

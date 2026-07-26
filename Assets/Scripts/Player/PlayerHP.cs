@@ -6,6 +6,7 @@ public class PlayerHP : MonoBehaviour
     [SerializeField] private GameCharacterManager gameCharacterManager;
     public float invincibleTime = 1.0f; // 無敵時間（秒）
     private float lastDamageTime = -10f; // 最後にダメージを受けた時刻
+    private float forcedInvincibleUntil = -1f;
 
     void Start()
     {
@@ -24,6 +25,11 @@ public class PlayerHP : MonoBehaviour
     // HPが変化したときに呼ぶ
     public void TakeDamage(int damage)
     {
+        if (Time.time < forcedInvincibleUntil)
+        {
+            return;
+        }
+
         if (gameCharacterManager == null)
         {
             return;
@@ -31,6 +37,13 @@ public class PlayerHP : MonoBehaviour
 
         // GameCharacterManager 経由でダメージを適用
         gameCharacterManager.ApplyDamageToCurrent(damage);
+    }
+
+    public void SetTemporaryInvincibility(float duration)
+    {
+        forcedInvincibleUntil = Mathf.Max(
+            forcedInvincibleUntil,
+            Time.time + Mathf.Max(0f, duration));
     }
 
     public void Heal(int amount)
@@ -49,6 +62,11 @@ public class PlayerHP : MonoBehaviour
     {
         if (other.CompareTag("Enemy"))
         {
+            if (Time.time < forcedInvincibleUntil)
+            {
+                return;
+            }
+
             if (Time.time - lastDamageTime >= invincibleTime)
             {
                 TakeDamage(10); // 例：10ダメージ

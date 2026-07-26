@@ -24,6 +24,10 @@ public class AttackManager : MonoBehaviour
     
     // プレイヤーの向き情報
     private IPlayerAttack playerAttack;
+    private readonly List<Collider2D> dashDisabledColliders =
+        new List<Collider2D>();
+    private readonly List<Behaviour> dashDisabledMovement =
+        new List<Behaviour>();
     
     private void Awake()
     {
@@ -52,6 +56,7 @@ public class AttackManager : MonoBehaviour
     public void SetAvailableAttacks(List<AttackData> newAttacks)
     {
         // キャラクター交代前の多段攻撃を残さない
+        RestoreDashState();
         StopAllCoroutines();
         attacksInProgress.Clear();
 
@@ -122,6 +127,10 @@ public class AttackManager : MonoBehaviour
         {
             StartCoroutine(ExecuteMultiHit(attackData));
         }
+        else if (attackData.attackType == AttackData.AttackType.Dash)
+        {
+            StartCoroutine(ExecuteDash(attackData));
+        }
         else
         {
             SpawnAttack(attackData, attackData.damage, attackData.scale);
@@ -129,6 +138,125 @@ public class AttackManager : MonoBehaviour
         }
 
         return true;
+    }
+
+    private IEnumerator ExecuteDash(AttackData attackData)
+    {
+        attacksInProgress.Add(attackData);
+        bool facingRight = IsFacingRight();
+        float directionSign =
+            attackData.followPlayerDirection && !facingRight ? -1f : 1f;
+        float duration = Mathf.Max(0.01f, attackData.dashDuration);
+
+        GameObject dashHitBox = SpawnAttack(
+            attackData,
+            attackData.damage,
+            attackData.scale,
+            facingRight,
+            duration);
+        if (dashHitBox != null)
+        {
+            dashHitBox.transform.SetParent(playerTransform, true);
+        }
+
+        PlayerHP playerHP = playerTransform.GetComponent<PlayerHP>();
+        if (attackData.invincibleDuringDash && playerHP != null)
+        {
+            playerHP.SetTemporaryInvincibility(duration + 0.05f);
+        }
+
+        BeginDashState();
+
+        Rigidbody2D playerBody =
+            playerTransform.GetComponent<Rigidbody2D>();
+        Vector2 startPosition = playerBody != null
+            ? playerBody.position
+            : (Vector2)playerTransform.position;
+        Vector2 endPosition = startPosition +
+            Vector2.right * directionSign * attackData.dashDistance;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.fixedDeltaTime;
+            Vector2 nextPosition = Vector2.Lerp(
+                startPosition,
+                endPosition,
+                Mathf.Clamp01(elapsed / duration));
+            if (playerBody != null)
+            {
+                playerBody.MovePosition(nextPosition);
+            }
+            else
+            {
+                playerTransform.position = new Vector3(
+                    nextPosition.x,
+                    nextPosition.y,
+                    playerTransform.position.z);
+            }
+            yield return new WaitForFixedUpdate();
+        }
+
+        RestoreDashState();
+        attacksInProgress.Remove(attackData);
+        StartCooldown(attackData);
+    }
+
+    private void BeginDashState()
+    {
+        RestoreDashState();
+
+        foreach (Collider2D collider in
+            playerTransform.GetComponents<Collider2D>())
+        {
+            if (collider.enabled && !collider.isTrigger)
+            {
+                collider.enabled = false;
+                dashDisabledColliders.Add(collider);
+            }
+        }
+
+        TouchMove2 touchMove =
+            playerTransform.GetComponent<TouchMove2>();
+        if (touchMove != null && touchMove.enabled)
+        {
+            touchMove.enabled = false;
+            dashDisabledMovement.Add(touchMove);
+        }
+
+        WASDMoveDebug debugMove =
+            playerTransform.GetComponent<WASDMoveDebug>();
+        if (debugMove != null && debugMove.enabled)
+        {
+            debugMove.enabled = false;
+            dashDisabledMovement.Add(debugMove);
+        }
+    }
+
+    private void RestoreDashState()
+    {
+        foreach (Collider2D collider in dashDisabledColliders)
+        {
+            if (collider != null)
+            {
+                collider.enabled = true;
+            }
+        }
+        dashDisabledColliders.Clear();
+
+        foreach (Behaviour movement in dashDisabledMovement)
+        {
+            if (movement != null)
+            {
+                movement.enabled = true;
+            }
+        }
+        dashDisabledMovement.Clear();
+    }
+
+    private void OnDisable()
+    {
+        RestoreDashState();
     }
 
     /// <summary>
@@ -231,16 +359,17 @@ public class AttackManager : MonoBehaviour
     /// <summary>
     /// 攻撃を生成
     /// </summary>
-    private void SpawnAttack(
+    private GameObject SpawnAttack(
         AttackData attackData,
         int damage,
         float scale,
-        bool? facingRightOverride = null)
+        bool? facingRightOverride = null,
+        float? lifetimeOverride = null)
     {
         if (attackData.hitBoxPrefab == null)
         {
             Debug.LogWarning($"{attackData.attackName} のヒットボックスPrefabが設定されていません");
-            return;
+            return null;
         }
         
         // プレイヤーの向きを取得
@@ -302,13 +431,14 @@ public class AttackManager : MonoBehaviour
                 attackData.offScreenMargin);
         }
         
-        float lifetime =
-            attackData.attackType == AttackData.AttackType.Projectile
+        float lifetime = lifetimeOverride ??
+            (attackData.attackType == AttackData.AttackType.Projectile
                 ? Mathf.Max(0.01f, attackData.projectileLifetime)
-                : Mathf.Max(0f, attackData.duration);
+                : Mathf.Max(0f, attackData.duration));
         Destroy(hitBoxObj, lifetime);
         
         Debug.Log($"{attackData.attackName} を実行 (ダメージ: {damage})");
+        return hitBoxObj;
     }
     
     private bool IsFacingRight()
