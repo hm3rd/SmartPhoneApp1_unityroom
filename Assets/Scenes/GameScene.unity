@@ -517,6 +517,93 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 149358519}
   m_CullTransparentMesh: 1
+--- !u!1 &153659678
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 153659679}
+  - component: {fileID: 153659680}
+  m_Layer: 0
+  m_Name: MoveRightPrompt
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &153659679
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 153659678}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 207, y: 9, z: 0}
+  m_LocalScale: {x: 17.661272, y: 22.001266, z: 0.2702703}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1423057866}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!212 &153659680
+SpriteRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 153659678}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_Sprite: {fileID: 6726362433738275752, guid: d615e5d78129636459523fddb4bf825d, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
+  m_DrawMode: 0
+  m_Size: {x: 7.36, y: 3.9}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 1
+  m_MaskInteraction: 0
+  m_SpriteSortPoint: 0
 --- !u!1 &207050373
 GameObject:
   m_ObjectHideFlags: 0
@@ -2723,6 +2810,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameCharacterManager: {fileID: 121978887}
   invincibleTime: 1.5
+  contactDamage: 10
+  knockbackDamageThreshold: 20
+  knockbackDistance: 1.5
+  knockbackDuration: 0.2
 --- !u!114 &824879842
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3674,49 +3765,62 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   allStages:
   - stageName: 1
+    clearStoneReward: 10
     subStages:
     - subStageName: 
       panel: {fileID: 738244000}
+      enemySpawnSettings: []
       enemyPrefab: {fileID: 268954723791303216, guid: 65f25d7435ac30e4ea7d046ed1d05c3f, type: 3}
       targetDefeatCount: 1
       spawnIntervalMin: 1
       spawnIntervalMax: 1
     - subStageName: 
       panel: {fileID: 1411679006}
+      enemySpawnSettings: []
       enemyPrefab: {fileID: 268954723791303216, guid: 65f25d7435ac30e4ea7d046ed1d05c3f, type: 3}
       targetDefeatCount: 2
       spawnIntervalMin: 1
       spawnIntervalMax: 1
   - stageName: 2
+    clearStoneReward: 20
     subStages:
     - subStageName: 
       panel: {fileID: 1411679006}
+      enemySpawnSettings: []
       enemyPrefab: {fileID: 268954723791303216, guid: 65f25d7435ac30e4ea7d046ed1d05c3f, type: 3}
       targetDefeatCount: 2
       spawnIntervalMin: 1
       spawnIntervalMax: 1
     - subStageName: 
       panel: {fileID: 132112356}
+      enemySpawnSettings: []
       enemyPrefab: {fileID: 268954723791303216, guid: 65f25d7435ac30e4ea7d046ed1d05c3f, type: 3}
       targetDefeatCount: 1
       spawnIntervalMin: 1
       spawnIntervalMax: 1
   - stageName: 3
+    clearStoneReward: 30
     subStages:
     - subStageName: 
       panel: {fileID: 738244000}
+      enemySpawnSettings:
+      - enemyName: 
+        enemyPrefab: {fileID: 0}
+        spawnCount: 0
       enemyPrefab: {fileID: 268954723791303216, guid: 65f25d7435ac30e4ea7d046ed1d05c3f, type: 3}
       targetDefeatCount: 1
       spawnIntervalMin: 1
       spawnIntervalMax: 1
     - subStageName: 
       panel: {fileID: 1411679006}
+      enemySpawnSettings: []
       enemyPrefab: {fileID: 268954723791303216, guid: 65f25d7435ac30e4ea7d046ed1d05c3f, type: 3}
       targetDefeatCount: 2
       spawnIntervalMin: 1
       spawnIntervalMax: 1
     - subStageName: 
       panel: {fileID: 132112356}
+      enemySpawnSettings: []
       enemyPrefab: {fileID: 268954723791303216, guid: 65f25d7435ac30e4ea7d046ed1d05c3f, type: 3}
       targetDefeatCount: 3
       spawnIntervalMin: 1
@@ -3724,7 +3828,10 @@ MonoBehaviour:
   player: {fileID: 824879837}
   rightEdgeX: 8
   leftEdgeX: -8
+  stageCamera: {fileID: 0}
+  screenEdgePadding: 0.05
   resultPanel: {fileID: 764361035}
+  moveRightPrompt: {fileID: 153659678}
   debugLogs: 0
   targetStageIndex: 0
 --- !u!4 &1260424969
@@ -4301,6 +4408,7 @@ RectTransform:
   - {fileID: 1609773215}
   - {fileID: 1099061439}
   - {fileID: 396500439}
+  - {fileID: 153659679}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -4521,6 +4629,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameCharacterManager: {fileID: 0}
   invincibleTime: 1.5
+  contactDamage: 10
+  knockbackDamageThreshold: 20
+  knockbackDistance: 1.5
+  knockbackDuration: 0.2
 --- !u!50 &1581078591
 Rigidbody2D:
   serializedVersion: 5

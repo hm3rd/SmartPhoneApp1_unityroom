@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 8814949367468107067}
   - component: {fileID: -2991910698650332079}
   - component: {fileID: 1515449362171987341}
+  - component: {fileID: 734902731046512489}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Enemy
@@ -102,7 +103,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 268954723791303216}
-  m_BodyType: 0
+  m_BodyType: 1
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -164,7 +165,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 268954723791303216}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fa9248b4db161d64e8146daf08c72137, type: 3}
   m_Name: 
@@ -204,6 +205,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 0.53
   playerSeparationPadding: 0.05
+--- !u!114 &734902731046512489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 268954723791303216}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6f2fc93c2834ad7ad93d72a513aeb9b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  damage: 10
+  attackRange: 1.6
+  attackCooldown: 1.5
+  attackWindup: 0.25
+  animator: {fileID: 0}
+  attackTriggerName: Attack
+  useSimpleMotion: 1
+  simpleMotionScale: 1.15
 --- !u!1 &330153795420946156
 GameObject:
   m_ObjectHideFlags: 0

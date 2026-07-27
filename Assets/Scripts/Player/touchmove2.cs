@@ -100,6 +100,14 @@ public class TouchMove2 : MonoBehaviour, IPlayerAttack
         solidCollider.radius = Mathf.Max(0.01f, collisionRadius);
     }
 
+    public void ClearPendingMovement()
+    {
+        pendingMovement = Vector2.zero;
+        moveVector = Vector2.zero;
+        flickVelocity = Vector3.zero;
+        flickTimer = 0f;
+    }
+
     void Move()
     {
         if (Input.touchCount > 0)

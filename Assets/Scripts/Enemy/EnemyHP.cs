@@ -9,6 +9,15 @@ public class EnemyHP : MonoBehaviour
     //NewStageMangerに統合されたから必要ないかも
     //public EnemySpawner spawner; // EnemySpawnerへの参照
     public NewStageManager manager; // これをInspectorでなくSpawn時にセット
+    private bool defeatReported;
+
+    public void Initialize(NewStageManager stageManager)
+    {
+        manager = stageManager;
+        defeatReported = false;
+        currentHP = maxHP;
+        UpdateHPBar();
+    }
 
     void Start()
     {
@@ -29,6 +38,7 @@ public class EnemyHP : MonoBehaviour
         UpdateHPBar();
         if (currentHP == 0)
         {
+            ReportDefeat();
             ScoreManager scoreManager = FindObjectOfType<ScoreManager>();
             if (scoreManager != null)
             {
@@ -48,8 +58,14 @@ public class EnemyHP : MonoBehaviour
 
     void OnDestroy()
     {
-        if (manager != null)
+        // シーン切替やサブステージ切替で消された敵は撃破数に含めない
+    }
+
+    private void ReportDefeat()
+    {
+        if (!defeatReported && manager != null)
         {
+            defeatReported = true;
             manager.OnEnemyDestroyed();
         }
     }

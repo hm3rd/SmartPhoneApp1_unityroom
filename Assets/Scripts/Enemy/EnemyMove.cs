@@ -15,6 +15,7 @@ public class EnemyMove : MonoBehaviour
     private float knockbackSpeed;
     private float knockbackTimeRemaining;
     private float knockbackTotalTime;
+    private bool movementLocked;
 
     void Awake()
     {
@@ -22,7 +23,8 @@ public class EnemyMove : MonoBehaviour
         solidCollider = FindSolidCollider(gameObject);
         if (rb != null)
         {
-            rb.bodyType = RigidbodyType2D.Dynamic;
+            // プレイヤーとの衝突で押されず、EnemyMoveからだけ移動させる
+            rb.bodyType = RigidbodyType2D.Kinematic;
             rb.gravityScale = 0f;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
@@ -51,7 +53,7 @@ public class EnemyMove : MonoBehaviour
             knockbackTimeRemaining =
                 Mathf.Max(0f, knockbackTimeRemaining - Time.fixedDeltaTime);
         }
-        else
+        else if (!movementLocked)
         if (player != null)
         {
             movement =
@@ -108,8 +110,9 @@ public class EnemyMove : MonoBehaviour
         if (awayFromPlayer.sqrMagnitude <
             minimumDistance * minimumDistance)
         {
-            return playerPosition +
-                awayFromPlayer.normalized * minimumDistance;
+            // プレイヤーの位置変化に合わせて敵を押し出さない。
+            // 敵自身がプレイヤーへ近付きすぎる場合だけ、その場で停止する。
+            return CurrentPosition;
         }
 
         return nextPosition;
@@ -144,5 +147,10 @@ public class EnemyMove : MonoBehaviour
 
         // 速度を直線的に0まで落としたとき、指定距離だけ進む初速
         knockbackSpeed = distance * 2f / knockbackTotalTime;
+    }
+
+    public void SetMovementLocked(bool locked)
+    {
+        movementLocked = locked;
     }
 }
