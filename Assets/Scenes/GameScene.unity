@@ -2810,7 +2810,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameCharacterManager: {fileID: 121978887}
   invincibleTime: 1.5
-  contactDamage: 10
+  contactDamage: 0
   knockbackDamageThreshold: 20
   knockbackDistance: 1.5
   knockbackDuration: 0.2
@@ -3820,9 +3820,15 @@ MonoBehaviour:
       spawnIntervalMax: 1
     - subStageName: 
       panel: {fileID: 132112356}
-      enemySpawnSettings: []
+      enemySpawnSettings:
+      - enemyName: Enemy
+        enemyPrefab: {fileID: 268954723791303216, guid: 65f25d7435ac30e4ea7d046ed1d05c3f, type: 3}
+        spawnCount: 2
+      - enemyName: EnemyBig
+        enemyPrefab: {fileID: 268954723791303216, guid: 25fdbc84e2958474c81f2c3106120133, type: 3}
+        spawnCount: 1
       enemyPrefab: {fileID: 268954723791303216, guid: 65f25d7435ac30e4ea7d046ed1d05c3f, type: 3}
-      targetDefeatCount: 3
+      targetDefeatCount: 2
       spawnIntervalMin: 1
       spawnIntervalMax: 1
   player: {fileID: 824879837}

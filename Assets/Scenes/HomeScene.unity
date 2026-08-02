@@ -2265,13 +2265,6 @@ MonoBehaviour:
   preparationPanel: {fileID: 722215988}
   readyButton: {fileID: 200037844}
   stageInfoText: {fileID: 0}
-  stageRewards:
-  - stageIndex: 0
-    stoneReward: 10
-  - stageIndex: 1
-    stoneReward: 20
-  - stageIndex: 2
-    stoneReward: 30
 --- !u!4 &598913616
 Transform:
   m_ObjectHideFlags: 0
@@ -4157,7 +4150,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1149682546}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 46ecc681aaac4fc4c886d873279795b1, type: 3}
   m_Name: 

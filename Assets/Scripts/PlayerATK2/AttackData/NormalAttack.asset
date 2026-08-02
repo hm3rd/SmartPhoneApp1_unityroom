@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackName: "\u6A19\u6E96"
   attackType: 0
-  damage: 10
-  cooldownTime: 0
+  damage: 15
+  cooldownTime: 0.3
   hitBoxPrefab: {fileID: 5509274092673679156, guid: 730b725bf9653b9438504b1468645d91, type: 3}
   duration: 0.2
   spawnDistance: 1
@@ -32,6 +32,9 @@ MonoBehaviour:
   destroyProjectileOnHit: 1
   destroyProjectileOffScreen: 1
   offScreenMargin: 0.05
+  dashDistance: 4
+  dashDuration: 0.3
+  invincibleDuringDash: 1
   hitCount: 3
   hitInterval: 0.15
   updateDirectionEachHit: 1

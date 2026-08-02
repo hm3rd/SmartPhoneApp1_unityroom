@@ -18,9 +18,11 @@ MonoBehaviour:
   characterSprite: {fileID: -9212917923897725054, guid: d40037679a63f4842ab0830beee155bf, type: 3}
   canBeObtainedFromGacha: 1
   gachaWeight: 5
+  homeTouchPhrases:
+  - "\u3093\u3001\u4F55\u7528\u3060\uFF1F"
   maxHP: 80
   moveSpeed: 5
   availableAttacks:
-  - {fileID: 11400000, guid: e5620a6d0fce3d046b76813ef5424b84, type: 2}
+  - {fileID: 11400000, guid: 1bba9eb41e60413ca73abe40c2975696, type: 2}
   characterPrefab: {fileID: 0}
   themeColor: {r: 1, g: 1, b: 1, a: 1}
