@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: d85fa68279a952740ae138c42de780e5
+guid: 43724ef0c6423dc47a5ab45a41c44870
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8108719791250420797
-    second: kage65img_0
+      213: 2293472531840622991
+    second: "\u30E9\u30D5\u3064\u30FC\u3061\u3083\u3093_0"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -96,43 +96,17 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: Android
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: WebGL
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: kage65img_0
+      name: "\u30E9\u30D5\u3064\u30FC\u3061\u3083\u3093_0"
       rect:
         serializedVersion: 2
         x: 0
-        y: 161
-        width: 680
-        height: 817
+        y: 0
+        width: 2800
+        height: 2100
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3cbc65bcf4a087f80800000000000000
-      internalID: -8108719791250420797
+      spriteID: f81e97acd1d04df10800000000000000
+      internalID: 2293472531840622991
       vertices: []
       indices: 
       edges: []
@@ -160,8 +134,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      kage65img_0: -8108719791250420797
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
