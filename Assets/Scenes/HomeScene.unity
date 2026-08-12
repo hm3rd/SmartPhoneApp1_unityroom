@@ -2265,13 +2265,6 @@ MonoBehaviour:
   preparationPanel: {fileID: 722215988}
   readyButton: {fileID: 200037844}
   stageInfoText: {fileID: 0}
-  stageRewards:
-  - stageIndex: 0
-    stoneReward: 10
-  - stageIndex: 1
-    stoneReward: 20
-  - stageIndex: 2
-    stoneReward: 30
 --- !u!4 &598913616
 Transform:
   m_ObjectHideFlags: 0
@@ -3675,6 +3668,7 @@ GameObject:
   - component: {fileID: 1021397983}
   - component: {fileID: 1021397982}
   - component: {fileID: 1021397986}
+  - component: {fileID: 1021397987}
   m_Layer: 5
   m_Name: UICanvas
   m_TagString: Untagged
@@ -3787,6 +3781,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f4029fc59233074888f278664b8a86f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1021397987
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1021397981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 735113a4c9f8f674ba25e3ef7314c6c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  anchor: {x: 1, y: 1}
+  anchoredPosition: {x: 0, y: 0}
+  size: {x: 100, y: 50}
 --- !u!1 &1068958226
 GameObject:
   m_ObjectHideFlags: 0

@@ -533,6 +533,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetPanel: {fileID: 0}
+  keepCurrentStateOnStart: 0
+  restorePreparationPanelState: 0
 --- !u!1 &737072507
 GameObject:
   m_ObjectHideFlags: 0
@@ -1078,6 +1080,7 @@ GameObject:
   - component: {fileID: 1296401504}
   - component: {fileID: 1296401503}
   - component: {fileID: 1296401502}
+  - component: {fileID: 1296401506}
   m_Layer: 5
   m_Name: CharacterCanvas
   m_TagString: Untagged
@@ -1172,6 +1175,30 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 960, y: 540}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1296401506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1296401501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 198b5df22f44da84e8a17c4ee5072654, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  viewportAnchorMin: {x: 0.03, y: 0.16}
+  viewportAnchorMax: {x: 0.55, y: 0.84}
+  imagePosition: {x: 0, y: 0}
+  imageSize: {x: 480, y: 780}
+  animationDuration: 0.5
+  touchCooldown: 0.2
+  uiJumpHeight: 55
+  jumpRepeatCount: 1
+  swingAngle: 10
+  swingCount: 2
+  zoomScale: 1.1
+  zoomRepeatCount: 1
 --- !u!1 &1982208939
 GameObject:
   m_ObjectHideFlags: 0

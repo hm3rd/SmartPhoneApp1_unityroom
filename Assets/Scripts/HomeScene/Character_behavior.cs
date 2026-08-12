@@ -73,6 +73,7 @@ public class Character_behavior : MonoBehaviour
     private bool _isReacting = false;
     private float _lastTouchTime = -10f;
     private int _lastPhraseIndex = -1;
+    private bool _uiMode;
 
     private enum AnimationType
     {
@@ -247,6 +248,9 @@ public class Character_behavior : MonoBehaviour
 
     void Update()
     {
+        // CharacterScene の UI では Button.onClick から同じ反応処理を呼ぶ。
+        if (_uiMode) return;
+
         RefreshSelectedHomeCharacterIfChanged();
 
         // スマホタッチ
@@ -296,7 +300,7 @@ public class Character_behavior : MonoBehaviour
         ReactToTouch();
     }
 
-    private void ReactToTouch()
+    public void ReactToTouch()
     {
         if (!_isReacting)
         {
@@ -306,6 +310,49 @@ public class Character_behavior : MonoBehaviour
         }
         ShowRandomPhrase();
         PlayRandomVoice();
+    }
+
+    /// <summary>
+    /// CharacterScene の UI ImageでもHomeSceneと同じ反応処理を利用するための設定。
+    /// UIではワールド座標の当たり判定を止め、ButtonからReactToTouchを呼び出す。
+    /// </summary>
+    public void ConfigureForCharacterUI(CharacterData character, Text reactionLabel, float uiJumpHeight = 55f)
+    {
+        _uiMode = true;
+        phraseText = reactionLabel;
+        jumpHeight = uiJumpHeight;
+
+        if (character != null && character.homeTouchPhrases != null &&
+            character.homeTouchPhrases.Length > 0)
+        {
+            touchPhrases = character.homeTouchPhrases;
+        }
+
+        _originalPos = transform.localPosition;
+        _originalScale = transform.localScale;
+        _originalRotation = transform.localRotation;
+        EnsurePhraseBubble();
+    }
+
+    /// <summary>CharacterScene用に共通タッチ演出の各値を上書きする。</summary>
+    public void ApplyTouchReactionSettings(
+        float duration,
+        float configuredJumpHeight,
+        int configuredJumpRepeatCount,
+        float configuredSwingAngle,
+        int configuredSwingCount,
+        float configuredZoomScale,
+        int configuredZoomRepeatCount,
+        float configuredTouchCooldown)
+    {
+        animationDuration = Mathf.Max(0.01f, duration);
+        jumpHeight = Mathf.Max(0f, configuredJumpHeight);
+        jumpRepeatCount = Mathf.Max(1, configuredJumpRepeatCount);
+        swingAngle = configuredSwingAngle;
+        swingCount = Mathf.Max(1, configuredSwingCount);
+        zoomScale = Mathf.Max(0.01f, configuredZoomScale);
+        zoomRepeatCount = Mathf.Max(1, configuredZoomRepeatCount);
+        touchCooldown = Mathf.Max(0f, configuredTouchCooldown);
     }
 
     private System.Collections.IEnumerator PlayAnimation(AnimationType animType)

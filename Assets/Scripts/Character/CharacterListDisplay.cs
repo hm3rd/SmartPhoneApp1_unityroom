@@ -74,6 +74,7 @@ public class CharacterListDisplay : MonoBehaviour
             return;
         }
         
+        CharacterSceneController sceneController = FindFirstObjectByType<CharacterSceneController>();
         for (int i = 0; i < count; i++)
         {
             CharacterData character = db.GetCharacter(i);
@@ -93,6 +94,10 @@ public class CharacterListDisplay : MonoBehaviour
             if (item != null)
             {
                 item.Setup(character);
+                if (sceneController != null)
+                {
+                    item.SetSelectionHandler(sceneController.ShowCharacter);
+                }
             }
         }
         
