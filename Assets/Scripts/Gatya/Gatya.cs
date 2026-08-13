@@ -22,6 +22,10 @@ public class Gatya : MonoBehaviour
     [SerializeField] private CharacterCatalog catalog;
     [SerializeField] private DuplicateMode duplicateMode = DuplicateMode.KeepAsOwned;
 
+    [Header("このガチャの排出キャラクター")]
+    [Tooltip("このガチャから排出するキャラクターだけを登録します。空の場合は従来どおりCatalog内の全ガチャ対象キャラを使用します")]
+    [SerializeField] private List<CharacterData> pickupPool = new List<CharacterData>();
+
     [Header("価格")]
     [Min(0)] [SerializeField] private int singleCost = 3;
     [Min(0)] [SerializeField] private int tenPullCost = 30;
@@ -98,7 +102,7 @@ public class Gatya : MonoBehaviour
     {
         if (isRolling) return;
 
-        if (catalog == null || GetTotalWeight() <= 0)
+        if (GetTotalWeight() <= 0)
         {
             ShowMessage("排出キャラクターが設定されていません");
             return;
@@ -159,7 +163,7 @@ public class Gatya : MonoBehaviour
     {
         int roll = Random.Range(0, totalWeight);
         int accumulated = 0;
-        foreach (CharacterData character in catalog.allCharacters)
+        foreach (CharacterData character in GetGachaPool())
         {
             if (character == null || !character.canBeObtainedFromGacha) continue;
             accumulated += Mathf.Max(1, character.gachaWeight);
@@ -170,10 +174,10 @@ public class Gatya : MonoBehaviour
 
     private int GetTotalWeight()
     {
-        if (catalog == null) return 0;
+        if ((pickupPool == null || pickupPool.Count == 0) && catalog == null) return 0;
 
         int total = 0;
-        foreach (CharacterData character in catalog.allCharacters)
+        foreach (CharacterData character in GetGachaPool())
         {
             if (character != null && character.canBeObtainedFromGacha)
             {
@@ -181,6 +185,37 @@ public class Gatya : MonoBehaviour
             }
         }
         return total;
+    }
+
+    private IEnumerable<CharacterData> GetGachaPool()
+    {
+        // 個別プールが設定されていれば、それだけを排出対象にする。
+        if (pickupPool != null && pickupPool.Count > 0)
+        {
+            return pickupPool;
+        }
+
+        // 既存シーンとの互換性：未設定ならCatalog全体を使用する。
+        return catalog != null
+            ? catalog.allCharacters
+            : System.Array.Empty<CharacterData>();
+    }
+
+    private void OnValidate()
+    {
+        singleCost = Mathf.Max(0, singleCost);
+        tenPullCost = Mathf.Max(0, tenPullCost);
+
+        if (pickupPool == null) return;
+        HashSet<CharacterData> registered = new HashSet<CharacterData>();
+        for (int i = pickupPool.Count - 1; i >= 0; i--)
+        {
+            CharacterData character = pickupPool[i];
+            if (character != null && !registered.Add(character))
+            {
+                pickupPool.RemoveAt(i);
+            }
+        }
     }
 
     private void FindExistingButtons()

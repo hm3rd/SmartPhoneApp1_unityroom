@@ -15,7 +15,7 @@ MonoBehaviour:
   characterId: 5
   characterName: "\u6851\u540D\u8C6A"
   description: 
-  characterSprite: {fileID: 1755411306012904776, guid: 51918bfd644c82e4ea5138fe1ad1359f, type: 3}
+  characterSprite: {fileID: 0}
   canBeObtainedFromGacha: 1
   gachaWeight: 100
   homeTouchPhrases:

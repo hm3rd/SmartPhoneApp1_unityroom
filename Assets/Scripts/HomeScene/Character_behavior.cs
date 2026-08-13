@@ -6,8 +6,20 @@ public class Character_behavior : MonoBehaviour
     private const string HomeCharacterIdKey = "SelectedCharacterId_0";
 
     [Header("ホーム表示キャラクター")]
-    [Tooltip("ホーム画面に表示するSpriteRenderer。未設定なら同じオブジェクトから取得")]
+    [Tooltip("ホーム画面に表示するSpriteRenderer。未設定なら自動作成します")]
     [SerializeField] private SpriteRenderer homeCharacterRenderer;
+
+    [Tooltip("SpriteRendererを自動作成した場合の描画順")]
+    [SerializeField] private int autoCreatedSortingOrder = 10;
+
+    [Header("ホーム画像の自動サイズ調整")]
+    [Range(0.05f, 1f)]
+    [Tooltip("キャラクター画像が使用できる画面幅の割合")]
+    [SerializeField] private float homeMaxViewportWidth = 0.65f;
+
+    [Range(0.05f, 1f)]
+    [Tooltip("キャラクター画像が使用できる画面高さの割合")]
+    [SerializeField] private float homeMaxViewportHeight = 0.78f;
 
     [Header("おさわり反応設定")]
     [Tooltip("タッチ時にランダム表示する台詞候補")]
@@ -74,6 +86,7 @@ public class Character_behavior : MonoBehaviour
     private float _lastTouchTime = -10f;
     private int _lastPhraseIndex = -1;
     private bool _uiMode;
+    private Vector3 _homeBaseScale;
 
     private enum AnimationType
     {
@@ -84,8 +97,14 @@ public class Character_behavior : MonoBehaviour
 
     void Awake()
     {
-        ApplySelectedHomeCharacter();
-        EnsurePhraseBubble();
+        _uiMode = transform is RectTransform && GetComponentInParent<Canvas>() != null;
+        if (!_uiMode)
+        {
+            _homeBaseScale = transform.localScale;
+            EnsureHomeCharacterRenderer();
+            ApplySelectedHomeCharacter();
+            EnsurePhraseBubble();
+        }
 
         _originalPos = transform.localPosition;
         _originalScale = transform.localScale;
@@ -106,14 +125,11 @@ public class Character_behavior : MonoBehaviour
     /// </summary>
     private void ApplySelectedHomeCharacter()
     {
-        if (homeCharacterRenderer == null)
+        EnsureHomeCharacterRenderer();
+        if (!PlayerPrefs.HasKey(HomeCharacterIdKey))
         {
-            homeCharacterRenderer = GetComponent<SpriteRenderer>();
-        }
-
-        if (homeCharacterRenderer == null ||
-            !PlayerPrefs.HasKey(HomeCharacterIdKey))
-        {
+            homeCharacterRenderer.sprite = null;
+            displayedCharacterId = -1;
             return;
         }
 
@@ -123,17 +139,91 @@ public class Character_behavior : MonoBehaviour
         CharacterData selectedCharacter = database.GetCharacterById(characterId);
         if (selectedCharacter == null || selectedCharacter.characterSprite == null)
         {
+            homeCharacterRenderer.sprite = null;
             Debug.LogWarning($"ホーム表示用キャラクターID {characterId} が見つかりません。", this);
             return;
         }
 
         homeCharacterRenderer.sprite = selectedCharacter.characterSprite;
+        homeCharacterRenderer.color = Color.white;
+        homeCharacterRenderer.enabled = true;
+        FitHomeCharacterToScreen();
         gameObject.name = selectedCharacter.characterName;
 
         if (selectedCharacter.homeTouchPhrases != null &&
             selectedCharacter.homeTouchPhrases.Length > 0)
         {
             touchPhrases = selectedCharacter.homeTouchPhrases;
+        }
+    }
+
+    private void EnsureHomeCharacterRenderer()
+    {
+        if (homeCharacterRenderer != null) return;
+
+        homeCharacterRenderer = GetComponent<SpriteRenderer>();
+        if (homeCharacterRenderer == null)
+        {
+            homeCharacterRenderer = gameObject.AddComponent<SpriteRenderer>();
+            homeCharacterRenderer.sortingOrder = autoCreatedSortingOrder;
+        }
+    }
+
+    private void FitHomeCharacterToScreen()
+    {
+        if (_uiMode || homeCharacterRenderer == null || homeCharacterRenderer.sprite == null)
+            return;
+
+        Camera targetCamera = Camera.main;
+        if (targetCamera == null) return;
+
+        Vector2 spriteSize = homeCharacterRenderer.sprite.bounds.size;
+        if (spriteSize.x <= 0f || spriteSize.y <= 0f) return;
+
+        float availableHeight;
+        float availableWidth;
+        if (targetCamera.orthographic)
+        {
+            float cameraHeight = targetCamera.orthographicSize * 2f;
+            availableHeight = cameraHeight * homeMaxViewportHeight;
+            availableWidth = cameraHeight * targetCamera.aspect * homeMaxViewportWidth;
+        }
+        else
+        {
+            float distance = Mathf.Abs(
+                Vector3.Dot(transform.position - targetCamera.transform.position,
+                    targetCamera.transform.forward));
+            float cameraHeight = 2f * distance *
+                Mathf.Tan(targetCamera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+            availableHeight = cameraHeight * homeMaxViewportHeight;
+            availableWidth = cameraHeight * targetCamera.aspect * homeMaxViewportWidth;
+        }
+
+        Vector3 parentScale = transform.parent != null
+            ? transform.parent.lossyScale
+            : Vector3.one;
+        float worldWidthAtBase = spriteSize.x * Mathf.Abs(_homeBaseScale.x * parentScale.x);
+        float worldHeightAtBase = spriteSize.y * Mathf.Abs(_homeBaseScale.y * parentScale.y);
+        if (worldWidthAtBase <= 0f || worldHeightAtBase <= 0f) return;
+
+        float fitMultiplier = Mathf.Min(
+            availableWidth / worldWidthAtBase,
+            availableHeight / worldHeightAtBase);
+        transform.localScale = _homeBaseScale * Mathf.Max(0.0001f, fitMultiplier);
+    }
+
+    private void OnValidate()
+    {
+        homeMaxViewportWidth = Mathf.Clamp(homeMaxViewportWidth, 0.05f, 1f);
+        homeMaxViewportHeight = Mathf.Clamp(homeMaxViewportHeight, 0.05f, 1f);
+        if (!Application.isPlaying || _uiMode) return;
+
+        // 実行中に画面占有率を変更した場合も即時反映する。
+        if (homeCharacterRenderer != null && homeCharacterRenderer.sprite != null)
+        {
+            FitHomeCharacterToScreen();
+            _originalScale = transform.localScale;
+            if (!_isReacting) transform.localScale = _originalScale;
         }
     }
 

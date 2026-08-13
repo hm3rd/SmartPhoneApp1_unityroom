@@ -15,9 +15,13 @@ MonoBehaviour:
   characterId: 1
   characterName: "\u6D25\u7530\u8D8A\u524D\u5B88\u52A9\u5EE3"
   description: "\u3064\u30FC\u3061\u3083\u3093\u3067\u3059"
-  characterSprite: {fileID: -1088588298251838489, guid: b37fc0e228fa6914d88c6c84fdc0a070, type: 3}
+  characterSprite: {fileID: 4823783743884871169, guid: 6f76d51734420e447905c37ca5d35fcc, type: 3}
   canBeObtainedFromGacha: 1
   gachaWeight: 10
+  homeTouchPhrases:
+  - "\u3084\u3081\u3066\u3063\u3066\u3070\uFF01"
+  - "\u304F\u3059\u3050\u3063\u305F\u3044\u3088"
+  - "\u3073\u3063\u304F\u308A\u3057\u305F\uFF01"
   maxHP: 100
   moveSpeed: 5
   availableAttacks:

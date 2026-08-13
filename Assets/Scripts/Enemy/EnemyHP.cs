@@ -29,8 +29,14 @@ public class EnemyHP : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
+        int dealtDamage = Mathf.Min(Mathf.Max(0, damage), currentHP);
         currentHP -= damage;
         if (currentHP < 0) currentHP = 0;
+
+        if (manager != null && dealtDamage > 0)
+        {
+            manager.OnDamageDealt(dealtDamage);
+        }
         
         // ダメージ表示
         DamagePopupManager.ShowDamage(damage, transform.position);

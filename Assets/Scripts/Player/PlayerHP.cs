@@ -11,20 +11,37 @@ public class PlayerHP : MonoBehaviour
     [Min(0)]
     [SerializeField] private int contactDamage = 10;
 
-    [Header("大ダメージ時のノックバック")]
-    [Min(0)]
-    [Tooltip("この値以上のダメージを受けるとノックバックします")]
-    [SerializeField] private int knockbackDamageThreshold = 20;
-
-    [Min(0f)]
-    [SerializeField] private float knockbackDistance = 1.5f;
+    [Header("ダメージ量に応じたノックバック")]
+    [Tooltip("横軸=受けたダメージ、縦軸=ノックバック距離。カーブ上を右クリックして点を追加できます")]
+    [SerializeField] private AnimationCurve knockbackDistanceByDamage =
+        new AnimationCurve(
+            new Keyframe(0f, 0f),
+            new Keyframe(10f, 0.5f),
+            new Keyframe(20f, 1.5f),
+            new Keyframe(100f, 4f));
 
     [Min(0.01f)]
     [SerializeField] private float knockbackDuration = 0.2f;
 
+    [Header("非常に大きなダメージ時の無敵")]
+    [Min(0)]
+    [Tooltip("この値以上のダメージを受けると無敵と点滅を開始します")]
+    [SerializeField] private int heavyDamageThreshold = 50;
+
+    [Min(0f)]
+    [SerializeField] private float heavyDamageInvincibleTime = 1.5f;
+
+    [Min(0.02f)]
+    [Tooltip("点灯・消灯を切り替える間隔")]
+    [SerializeField] private float blinkInterval = 0.1f;
+
+    [Tooltip("点滅させるPlayer画像。未設定なら子オブジェクトを含めて自動検索します")]
+    [SerializeField] private SpriteRenderer playerVisualRenderer;
+
     private float lastDamageTime = -10f; // 最後にダメージを受けた時刻
     private float forcedInvincibleUntil = -1f;
     private Coroutine knockbackCoroutine;
+    private Coroutine blinkCoroutine;
 
     void Start()
     {
@@ -37,6 +54,11 @@ public class PlayerHP : MonoBehaviour
                 enabled = false;
                 return;
             }
+        }
+
+        if (playerVisualRenderer == null)
+        {
+            playerVisualRenderer = GetComponentInChildren<SpriteRenderer>(true);
         }
     }
 
@@ -63,14 +85,24 @@ public class PlayerHP : MonoBehaviour
             return;
         }
 
+        damage = Mathf.Max(0, damage);
+        if (damage == 0) return;
+
         // GameCharacterManager 経由でダメージを適用
         gameCharacterManager.ApplyDamageToCurrent(damage);
 
-        if (damageSourcePosition.HasValue &&
-            damage >= knockbackDamageThreshold &&
-            knockbackDistance > 0f)
+        float knockbackDistance = knockbackDistanceByDamage != null
+            ? Mathf.Max(0f, knockbackDistanceByDamage.Evaluate(damage))
+            : 0f;
+        if (damageSourcePosition.HasValue && knockbackDistance > 0f)
         {
-            StartPlayerKnockback(damageSourcePosition.Value);
+            StartPlayerKnockback(damageSourcePosition.Value, knockbackDistance);
+        }
+
+        if (damage >= heavyDamageThreshold && heavyDamageInvincibleTime > 0f)
+        {
+            SetTemporaryInvincibility(heavyDamageInvincibleTime);
+            StartBlink(heavyDamageInvincibleTime);
         }
     }
 
@@ -92,17 +124,17 @@ public class PlayerHP : MonoBehaviour
         gameCharacterManager.HealCurrent(amount);
     }
 
-    private void StartPlayerKnockback(Vector2 sourcePosition)
+    private void StartPlayerKnockback(Vector2 sourcePosition, float distance)
     {
         if (knockbackCoroutine != null)
         {
             return;
         }
         knockbackCoroutine =
-            StartCoroutine(PlayerKnockbackRoutine(sourcePosition));
+            StartCoroutine(PlayerKnockbackRoutine(sourcePosition, distance));
     }
 
-    private IEnumerator PlayerKnockbackRoutine(Vector2 sourcePosition)
+    private IEnumerator PlayerKnockbackRoutine(Vector2 sourcePosition, float distance)
     {
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         TouchMove2 touchMove = GetComponent<TouchMove2>();
@@ -129,7 +161,7 @@ public class PlayerHP : MonoBehaviour
             direction = Vector2.left;
         }
         Vector2 endPosition =
-            startPosition + direction.normalized * knockbackDistance;
+            startPosition + direction.normalized * distance;
         float duration = Mathf.Max(0.01f, knockbackDuration);
         float elapsed = 0f;
 
@@ -166,6 +198,51 @@ public class PlayerHP : MonoBehaviour
             debugMove.enabled = restoreDebugMove;
         }
         knockbackCoroutine = null;
+    }
+
+    private void StartBlink(float duration)
+    {
+        if (playerVisualRenderer == null)
+        {
+            playerVisualRenderer = GetComponentInChildren<SpriteRenderer>(true);
+        }
+        if (playerVisualRenderer == null) return;
+
+        if (blinkCoroutine != null)
+        {
+            StopCoroutine(blinkCoroutine);
+            playerVisualRenderer.enabled = true;
+        }
+        blinkCoroutine = StartCoroutine(BlinkRoutine(duration));
+    }
+
+    private IEnumerator BlinkRoutine(float duration)
+    {
+        float endTime = Time.time + Mathf.Max(0f, duration);
+        WaitForSeconds wait = new WaitForSeconds(Mathf.Max(0.02f, blinkInterval));
+        while (Time.time < endTime)
+        {
+            playerVisualRenderer.enabled = !playerVisualRenderer.enabled;
+            yield return wait;
+        }
+        playerVisualRenderer.enabled = true;
+        blinkCoroutine = null;
+    }
+
+    private void OnDisable()
+    {
+        if (playerVisualRenderer != null)
+        {
+            playerVisualRenderer.enabled = true;
+        }
+    }
+
+    private void OnValidate()
+    {
+        knockbackDuration = Mathf.Max(0.01f, knockbackDuration);
+        heavyDamageThreshold = Mathf.Max(0, heavyDamageThreshold);
+        heavyDamageInvincibleTime = Mathf.Max(0f, heavyDamageInvincibleTime);
+        blinkInterval = Mathf.Max(0.02f, blinkInterval);
     }
 
     // Enemyタグに当たったらダメージ（無敵時間考慮）

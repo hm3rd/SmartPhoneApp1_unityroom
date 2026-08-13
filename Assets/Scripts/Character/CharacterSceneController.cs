@@ -16,6 +16,7 @@ public sealed class CharacterSceneController : MonoBehaviour
     [SerializeField] private Text descriptionText;
     [SerializeField] private Text reactionText;
     [SerializeField] private Button confirmButton;
+    [SerializeField] private GameObject characterPlaceholder;
     [SerializeField] private float slideSeconds = 0.25f;
 
     private CharacterData currentCharacter;
@@ -23,6 +24,7 @@ public sealed class CharacterSceneController : MonoBehaviour
     private Coroutine panelAnimation;
     private Character_behavior sharedTouchReaction;
     private CharacterPortraitLayout portraitLayout;
+    private RectTransform reactionRoot;
 
     private bool IsFormationSelection => HomeScenePanelState.HasSavedState ||
         PlayerPrefs.HasKey("CurrentSelectingSlot");
@@ -36,8 +38,18 @@ public sealed class CharacterSceneController : MonoBehaviour
             if (ownerCanvas != null) portraitLayout = ownerCanvas.GetComponent<CharacterPortraitLayout>();
         }
         if (sharedTouchReaction == null)
+        {
             sharedTouchReaction = characterImage.GetComponent<Character_behavior>() ??
                                   characterImage.gameObject.AddComponent<Character_behavior>();
+        }
+        if (characterPlaceholder == null)
+        {
+            characterPlaceholder = CreatePlaceholder(characterImage.transform.parent);
+            Button placeholderButton = characterPlaceholder.AddComponent<Button>();
+            placeholderButton.targetGraphic = characterPlaceholder.GetComponent<Image>();
+            placeholderButton.transition = Selectable.Transition.None;
+            placeholderButton.onClick.AddListener(ReactToCharacter);
+        }
         shownPosition = detailPanel.anchoredPosition;
         detailPanel.gameObject.SetActive(false);
     }
@@ -59,6 +71,9 @@ public sealed class CharacterSceneController : MonoBehaviour
         currentCharacter = data;
         characterImage.sprite = data.characterSprite;
         characterImage.preserveAspect = true;
+        characterImage.enabled = data.characterSprite != null;
+        if (characterPlaceholder != null)
+            characterPlaceholder.SetActive(data.characterSprite == null);
         nameText.text = data.characterName;
         statusText.text = BuildStatusText(data);
         descriptionText.text = data.description;
@@ -164,7 +179,12 @@ public sealed class CharacterSceneController : MonoBehaviour
         SetRect(portraitViewport.GetComponent<RectTransform>(), viewportMin, viewportMax);
         portraitViewport.AddComponent<RectMask2D>();
 
-        characterImage = CreateUI("UpperBodyCharacter", portraitViewport.transform).AddComponent<Image>();
+        // この親のPivotを中央に固定し、共通スクリプトによる回転の中心にする。
+        GameObject reactionObject = CreateUI("CharacterReactionRoot", portraitViewport.transform);
+        reactionRoot = reactionObject.GetComponent<RectTransform>();
+        SetRect(reactionRoot, Vector2.zero, Vector2.one);
+
+        characterImage = CreateUI("UpperBodyCharacter", reactionRoot).AddComponent<Image>();
         RectTransform characterRect = characterImage.rectTransform;
         characterRect.anchorMin = new Vector2(0.5f, 1f);
         characterRect.anchorMax = new Vector2(0.5f, 1f);
@@ -176,11 +196,17 @@ public sealed class CharacterSceneController : MonoBehaviour
             ? portraitLayout.imageSize
             : new Vector2(680f, 980f);
         characterImage.color = Color.white;
-        sharedTouchReaction = characterImage.gameObject.AddComponent<Character_behavior>();
+        sharedTouchReaction = reactionObject.AddComponent<Character_behavior>();
         Button touchButton = characterImage.gameObject.AddComponent<Button>();
         touchButton.targetGraphic = characterImage;
         touchButton.transition = Selectable.Transition.None;
         touchButton.onClick.AddListener(ReactToCharacter);
+
+        characterPlaceholder = CreatePlaceholder(reactionRoot);
+        Button placeholderButton = characterPlaceholder.AddComponent<Button>();
+        placeholderButton.targetGraphic = characterPlaceholder.GetComponent<Image>();
+        placeholderButton.transition = Selectable.Transition.None;
+        placeholderButton.onClick.AddListener(ReactToCharacter);
 
         nameText = CreateText("CharacterName", detailPanel, 34, TextAnchor.MiddleCenter);
         SetRect(nameText.rectTransform, new Vector2(0.05f, 0.85f), new Vector2(0.95f, 0.97f));
@@ -228,6 +254,26 @@ public sealed class CharacterSceneController : MonoBehaviour
         text.text = label;
         SetRect(text.rectTransform, Vector2.zero, Vector2.one);
         return button;
+    }
+
+    private static GameObject CreatePlaceholder(Transform parent)
+    {
+        GameObject placeholder = CreateUI("CharacterPlaceholder", parent);
+        RectTransform rect = placeholder.GetComponent<RectTransform>();
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = new Vector2(260f, 260f);
+        rect.anchoredPosition = Vector2.zero;
+        rect.localRotation = Quaternion.Euler(0f, 0f, 45f);
+        Image shape = placeholder.AddComponent<Image>();
+        shape.color = new Color(0.28f, 0.34f, 0.46f, 1f);
+
+        Text question = CreateText("QuestionMark", placeholder.transform, 96, TextAnchor.MiddleCenter);
+        question.text = "?";
+        question.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -45f);
+        SetRect(question.rectTransform, Vector2.zero, Vector2.one);
+        placeholder.SetActive(false);
+        return placeholder;
     }
 
     private static void SetRect(RectTransform rect, Vector2 min, Vector2 max)

@@ -257,6 +257,8 @@ MonoBehaviour:
   attackButtons:
   - {fileID: 1926968530}
   - {fileID: 581981985}
+  placeholderWorldSize: 8
+  normalizeCharacterSpriteSize: 1
 --- !u!4 &121978888
 Transform:
   m_ObjectHideFlags: 0
@@ -760,7 +762,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &324282641
 RectTransform:
   m_ObjectHideFlags: 0
@@ -910,7 +912,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 350.59998, y: 7.7}
+  m_AnchoredPosition: {x: 350.59998, y: 0}
   m_SizeDelta: {x: 66.25, y: 54.75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &396500440
@@ -2018,7 +2020,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &680785878
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2708,7 +2710,6 @@ GameObject:
   - component: {fileID: 824879842}
   - component: {fileID: 824879838}
   - component: {fileID: 824879841}
-  - component: {fileID: 824879847}
   - component: {fileID: 824879840}
   - component: {fileID: 824879839}
   - component: {fileID: 824879848}
@@ -2811,9 +2812,53 @@ MonoBehaviour:
   gameCharacterManager: {fileID: 121978887}
   invincibleTime: 1.5
   contactDamage: 10
-  knockbackDamageThreshold: 20
-  knockbackDistance: 1.5
+  knockbackDistanceByDamage:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0.5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 20
+      value: 1.5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 100
+      value: 4
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   knockbackDuration: 0.2
+  heavyDamageThreshold: 50
+  heavyDamageInvincibleTime: 2
+  blinkInterval: 0.1
+  playerVisualRenderer: {fileID: 0}
 --- !u!114 &824879842
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2938,18 +2983,6 @@ MonoBehaviour:
   affectDirection: 1
   clampZToZero: 0
   verboseLog: 0
---- !u!114 &824879847
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 824879837}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f7aa18e8788a6814fb9541853c6e7cf0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!58 &824879848
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -3526,7 +3559,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 2530564911472380330, guid: d1472e6c0796c9246862a8567be9fcba, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -3831,6 +3864,8 @@ MonoBehaviour:
   stageCamera: {fileID: 0}
   screenEdgePadding: 0.05
   resultPanel: {fileID: 764361035}
+  sRankHealthRatio: 0.9
+  aRankHealthRatio: 0.7
   moveRightPrompt: {fileID: 153659678}
   debugLogs: 0
   targetStageIndex: 0
@@ -4630,9 +4665,53 @@ MonoBehaviour:
   gameCharacterManager: {fileID: 0}
   invincibleTime: 1.5
   contactDamage: 10
-  knockbackDamageThreshold: 20
-  knockbackDistance: 1.5
+  knockbackDistanceByDamage:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0.5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 20
+      value: 1.5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 100
+      value: 4
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   knockbackDuration: 0.2
+  heavyDamageThreshold: 50
+  heavyDamageInvincibleTime: 1.5
+  blinkInterval: 0.1
+  playerVisualRenderer: {fileID: 0}
 --- !u!50 &1581078591
 Rigidbody2D:
   serializedVersion: 5
@@ -4750,7 +4829,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 350.59998, y: 155.09999}
+  m_AnchoredPosition: {x: 350.59998, y: 148.7}
   m_SizeDelta: {x: 66.25, y: 54.75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1609773216
@@ -4801,7 +4880,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1088588298251838489, guid: b37fc0e228fa6914d88c6c84fdc0a070, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1

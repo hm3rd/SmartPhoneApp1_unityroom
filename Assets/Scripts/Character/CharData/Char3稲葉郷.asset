@@ -15,7 +15,7 @@ MonoBehaviour:
   characterId: 3
   characterName: "\u7A32\u8449\u90F7"
   description: "\u3070\u3054\u3061\u3083\u3093"
-  characterSprite: {fileID: -3146666543393098173, guid: 23597c0ed3aca0448aa66aa3d63a1a5e, type: 3}
+  characterSprite: {fileID: 0}
   canBeObtainedFromGacha: 1
   gachaWeight: 10
   homeTouchPhrases:

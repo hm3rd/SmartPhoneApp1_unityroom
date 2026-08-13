@@ -63,6 +63,15 @@ public class NewStageManager : MonoBehaviour
     [Header("クリア表示")]
     public GameObject resultPanel;
 
+    [Header("クリア評価（3体の残りHP合計割合）")]
+    [Range(0f, 1f)]
+    [Tooltip("S評価に必要な残りHP割合。0.8なら80%以上")]
+    [SerializeField] private float sRankHealthRatio = 0.8f;
+
+    [Range(0f, 1f)]
+    [Tooltip("A評価に必要な残りHP割合。これ未満はB評価")]
+    [SerializeField] private float aRankHealthRatio = 0.5f;
+
     [Tooltip("サブステージクリア後に表示する「右へ移動」案内画像")]
     [SerializeField] private GameObject moveRightPrompt;
 
@@ -76,6 +85,8 @@ public class NewStageManager : MonoBehaviour
     private bool isStageMoving = false;
     private int spawnedEnemyCount = 0;
     private int defeatedEnemyCount = 0;
+    private int totalDefeatedEnemyCount = 0;
+    private long totalDamageDealt = 0;
     private float timer = 0f;
     private float nextSpawnTime = 1f;
     private bool isSubStageCleared = false;
@@ -86,9 +97,12 @@ public class NewStageManager : MonoBehaviour
     private Rigidbody2D playerBody;
     private Collider2D playerSolidCollider;
     private SpriteRenderer playerSpriteRenderer;
+    private GameResultPanelController resultController;
+    private float stageStartTime;
 
     void Start()
     {
+    stageStartTime = Time.time;
     // 他スクリプト（StageSelector）から送られたステージ番号を取得
     targetStageIndex = PlayerPrefs.GetInt("SelectedStageIndex", 0);
 
@@ -112,7 +126,11 @@ public class NewStageManager : MonoBehaviour
     SetSubStage(currentSubStage);
 
     if (resultPanel != null)
+    {
+        resultController = resultPanel.GetComponent<GameResultPanelController>() ??
+                           resultPanel.AddComponent<GameResultPanelController>();
         resultPanel.SetActive(false);
+    }
     SetMoveRightPrompt(false);
     }
 
@@ -221,6 +239,7 @@ public class NewStageManager : MonoBehaviour
     public void OnEnemyDestroyed()
     {
         defeatedEnemyCount++;
+        totalDefeatedEnemyCount++;
         if (debugLogs)
         {
             Debug.Log(
@@ -250,6 +269,14 @@ public class NewStageManager : MonoBehaviour
         }
     }
 
+    public void OnDamageDealt(int damage)
+    {
+        if (!isStageCleared && damage > 0)
+        {
+            totalDamageDealt += damage;
+        }
+    }
+
     private void LateUpdate()
     {
         KeepPlayerInsideScreen();
@@ -275,10 +302,62 @@ public class NewStageManager : MonoBehaviour
         PlayerPrefs.Save();
         clearRewardGranted = true;
 
+        if (resultController != null)
+        {
+            float clearTime = Mathf.Max(0f, Time.time - stageStartTime);
+            float remainingHealthRatio = CalculatePartyHealthRatio();
+            string evaluation = EvaluateClearRank(remainingHealthRatio);
+            resultController.Show(
+                totalDefeatedEnemyCount,
+                totalDamageDealt,
+                reward,
+                clearTime,
+                evaluation,
+                remainingHealthRatio);
+        }
+
         if (debugLogs)
         {
             Debug.Log($"[Stage] クリア報酬として石を{reward}個獲得しました。");
         }
+    }
+
+    private float CalculatePartyHealthRatio()
+    {
+        GameCharacterManager characterManager =
+            FindFirstObjectByType<GameCharacterManager>();
+        if (characterManager == null) return 0f;
+
+        long currentHealth = 0;
+        long maxHealth = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            int slotMaxHealth = Mathf.Max(0, characterManager.GetCharacterMaxHp(i));
+            if (slotMaxHealth <= 0) continue;
+            maxHealth += slotMaxHealth;
+            currentHealth += Mathf.Clamp(
+                characterManager.GetCharacterCurrentHp(i),
+                0,
+                slotMaxHealth);
+        }
+        return maxHealth > 0
+            ? Mathf.Clamp01((float)currentHealth / maxHealth)
+            : 0f;
+    }
+
+    private string EvaluateClearRank(float healthRatio)
+    {
+        float sThreshold = Mathf.Clamp01(sRankHealthRatio);
+        float aThreshold = Mathf.Min(sThreshold, Mathf.Clamp01(aRankHealthRatio));
+        if (healthRatio >= sThreshold) return "S";
+        if (healthRatio >= aThreshold) return "A";
+        return "B";
+    }
+
+    private void OnValidate()
+    {
+        sRankHealthRatio = Mathf.Clamp01(sRankHealthRatio);
+        aRankHealthRatio = Mathf.Clamp(aRankHealthRatio, 0f, sRankHealthRatio);
     }
 
     public void SetSubStage(int subStageIdx)

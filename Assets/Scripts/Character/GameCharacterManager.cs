@@ -27,6 +27,14 @@ public class GameCharacterManager : MonoBehaviour
     [SerializeField] private Transform playerVisualRoot; // 任意: プレハブを差し替える置き場所
     [SerializeField] private AttackButton[] attackButtons; // 攻撃ボタンの参照（キャラ交代時に更新）
 
+    [Header("未選択時の仮図形")]
+    [Tooltip("仮図形のワールド座標上の幅と高さ。PlayerのTransformやColliderには影響しません")]
+    [Min(0.1f)]
+    [SerializeField] private float placeholderWorldSize = 2.5f;
+
+    [Tooltip("キャラクター画像も仮図形と同じ範囲に収まるよう自動調整します")]
+    [SerializeField] private bool normalizeCharacterSpriteSize = true;
+
     // 選択された3体のキャラクター情報
     private int[] characterIds = new int[CHARACTER_SLOT_COUNT];
     private string[] characterNames = new string[CHARACTER_SLOT_COUNT];
@@ -38,6 +46,9 @@ public class GameCharacterManager : MonoBehaviour
     // 現在アクティブなキャラクター（配列内のインデックス）
     private int currentCharacterIndex = 0;
     private GameObject currentVisualInstance;
+    private Sprite placeholderSprite;
+    private Vector3 playerRendererBaseScale = Vector3.one;
+    private bool playerRendererBaseScaleCaptured;
     
     private CharacterDatabase characterDatabase;
 
@@ -51,6 +62,7 @@ public class GameCharacterManager : MonoBehaviour
 
     void Start()
     {
+        CapturePlayerRendererBaseScale();
         LoadSelectedCharacters();
         InitializeUI();
         UpdateDisplay();
@@ -310,6 +322,7 @@ public class GameCharacterManager : MonoBehaviour
 
         if (activeData == null)
         {
+            ApplyPlaceholderToPlayer();
             return;
         }
 
@@ -345,10 +358,18 @@ public class GameCharacterManager : MonoBehaviour
         }
 
         // 見た目（スプライト）を差し替え
-        if (playerSpriteRenderer != null && activeData.characterSprite != null)
+        if (playerSpriteRenderer != null)
         {
-            playerSpriteRenderer.sprite = activeData.characterSprite;
-            playerSpriteRenderer.color = activeData.themeColor;
+            CapturePlayerRendererBaseScale();
+            bool hasCharacterImage = activeData.characterSprite != null;
+            playerSpriteRenderer.enabled = true;
+            playerSpriteRenderer.sprite = hasCharacterImage
+                ? activeData.characterSprite
+                : GetPlaceholderSprite();
+            playerSpriteRenderer.color = hasCharacterImage
+                ? activeData.themeColor
+                : new Color(0.25f, 0.75f, 1f, 1f);
+            ApplyNormalizedRendererScale(playerSpriteRenderer.sprite);
         }
 
         // プレハブを差し替える場合（任意設定）
@@ -367,5 +388,83 @@ public class GameCharacterManager : MonoBehaviour
                 currentVisualInstance.transform.localScale = Vector3.one;
             }
         }
+    }
+
+    private void ApplyPlaceholderToPlayer()
+    {
+        if (playerSpriteRenderer != null)
+        {
+            CapturePlayerRendererBaseScale();
+            playerSpriteRenderer.sprite = GetPlaceholderSprite();
+            playerSpriteRenderer.color = new Color(0.25f, 0.75f, 1f, 1f);
+            playerSpriteRenderer.enabled = true;
+            ApplyNormalizedRendererScale(playerSpriteRenderer.sprite);
+        }
+
+        if (playerVisualRoot != null && currentVisualInstance != null)
+        {
+            Destroy(currentVisualInstance);
+            currentVisualInstance = null;
+        }
+    }
+
+    private void CapturePlayerRendererBaseScale()
+    {
+        if (playerRendererBaseScaleCaptured || playerSpriteRenderer == null) return;
+        playerRendererBaseScale = playerSpriteRenderer.transform.localScale;
+        playerRendererBaseScaleCaptured = true;
+    }
+
+    private void ApplyNormalizedRendererScale(Sprite sprite)
+    {
+        if (playerSpriteRenderer == null || !playerRendererBaseScaleCaptured) return;
+        if (!normalizeCharacterSpriteSize || sprite == null)
+        {
+            playerSpriteRenderer.transform.localScale = playerRendererBaseScale;
+            return;
+        }
+
+        Vector2 spriteSize = sprite.bounds.size;
+        float largestSide = Mathf.Max(spriteSize.x, spriteSize.y);
+        float multiplier = largestSide > 0.0001f
+            ? placeholderWorldSize / largestSide
+            : 1f;
+        playerSpriteRenderer.transform.localScale =
+            playerRendererBaseScale * multiplier;
+    }
+
+    /// <summary>画像未設定時に使用する、白いひし形のSpriteを実行時に生成する。</summary>
+    private Sprite GetPlaceholderSprite()
+    {
+        if (placeholderSprite != null) return placeholderSprite;
+
+        const int size = 64;
+        Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        texture.name = "PlayerPlaceholderTexture";
+        texture.filterMode = FilterMode.Bilinear;
+        Color32 clear = new Color32(255, 255, 255, 0);
+        Color32 white = new Color32(255, 255, 255, 255);
+        int center = size / 2;
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                bool insideDiamond = Mathf.Abs(x - center) + Mathf.Abs(y - center) <= center - 2;
+                texture.SetPixel(x, y, insideDiamond ? white : clear);
+            }
+        }
+        texture.Apply();
+        placeholderSprite = Sprite.Create(
+            texture,
+            new Rect(0f, 0f, size, size),
+            new Vector2(0.5f, 0.5f),
+            size / Mathf.Max(0.1f, placeholderWorldSize));
+        placeholderSprite.name = "PlayerPlaceholderDiamond";
+        return placeholderSprite;
+    }
+
+    private void OnValidate()
+    {
+        placeholderWorldSize = Mathf.Max(0.1f, placeholderWorldSize);
     }
 }
