@@ -138,7 +138,7 @@ public class NewCharacterManager : MonoBehaviour
             UpdateSlotDisplay(i);
         }
 
-        CheckAllCharactersSelected();
+        UpdateStartButtonAvailability();
     }
 
     /// <summary>
@@ -240,7 +240,7 @@ public class NewCharacterManager : MonoBehaviour
 
         UpdateSlotDisplay(currentSelectingSlot);
         isWaitingForSelection = false;
-        CheckAllCharactersSelected();
+        UpdateStartButtonAvailability();
         SaveSelectionsToPrefs();
     }
 
@@ -299,19 +299,11 @@ public class NewCharacterManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 3体全て選択されたかチェック
+    /// 一番左（スロット0）にキャラクターが選択されているかチェック
     /// </summary>
-    void CheckAllCharactersSelected()
+    void UpdateStartButtonAvailability()
     {
-        bool allSelected = true;
-        for (int i = 0; i < CHARACTER_SLOT_COUNT; i++)
-        {
-            if (selectedCharacterIds[i] == INVALID_CHARACTER_ID)
-            {
-                allSelected = false;
-                break;
-            }
-        }
+        bool canStart = selectedCharacterIds[0] != INVALID_CHARACTER_ID;
 
         if (startGameButton != null)
         {
@@ -322,7 +314,7 @@ public class NewCharacterManager : MonoBehaviour
                 button.onClick.AddListener(OnStartGameButtonClicked);
             }
 
-            startGameButton.SetActive(allSelected);
+            startGameButton.SetActive(canStart);
         }
     }
     
