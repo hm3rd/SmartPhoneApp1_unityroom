@@ -13,7 +13,7 @@ public class HitBox : MonoBehaviour
     private float knockbackDistance;
     private float knockbackDuration = 0.15f;
     private bool destroyOnHit;
-    private readonly HashSet<int> damagedEnemies = new HashSet<int>();
+    private readonly HashSet<EntityId> damagedEnemies = new HashSet<EntityId>();
     
     /// <summary>
     /// ダメージを設定
@@ -49,7 +49,7 @@ public class HitBox : MonoBehaviour
             GameObject enemyObject = enemyHP != null
                 ? enemyHP.gameObject
                 : other.transform.root.gameObject;
-            if (!damagedEnemies.Add(enemyObject.GetInstanceID()))
+            if (!damagedEnemies.Add(enemyObject.GetEntityId()))
             {
                 return;
             }

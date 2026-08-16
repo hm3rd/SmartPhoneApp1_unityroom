@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "SmartPhoneApp1_unityroom.sln"
+    "dotnet.defaultSolution": "SmartPhoneApp1_unityroom.slnx"
 }
