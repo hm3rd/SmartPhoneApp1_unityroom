@@ -383,7 +383,7 @@ public class Gatya : MonoBehaviour
         GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
         textObject.transform.SetParent(parent, false);
         Text text = textObject.GetComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        JapaneseFontProvider.Apply(text);
         text.fontSize = fontSize;
         text.alignment = TextAnchor.MiddleCenter;
         text.color = Color.white;

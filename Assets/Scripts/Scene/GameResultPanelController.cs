@@ -176,7 +176,7 @@ public sealed class GameResultPanelController : MonoBehaviour, IPointerClickHand
     private static Text CreateText(string name, Transform parent, int fontSize, TextAnchor alignment)
     {
         Text text = CreateUI(name, parent).AddComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        JapaneseFontProvider.Apply(text);
         text.fontSize = fontSize;
         text.color = Color.white;
         text.alignment = alignment;

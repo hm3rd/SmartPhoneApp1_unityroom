@@ -48,7 +48,7 @@ public static class CharacterMenuBootstrap
         labelRect.anchorMax = Vector2.one;
         labelRect.offsetMin = labelRect.offsetMax = Vector2.zero;
         Text label = labelObject.GetComponent<Text>();
-        label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        JapaneseFontProvider.Apply(label);
         label.text = "MENU";
         label.fontSize = 28;
         label.alignment = TextAnchor.MiddleCenter;

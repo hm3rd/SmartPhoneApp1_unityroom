@@ -233,7 +233,7 @@ public sealed class CharacterSceneController : MonoBehaviour
     private static Text CreateText(string name, Transform parent, int size, TextAnchor alignment)
     {
         Text text = CreateUI(name, parent).AddComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        JapaneseFontProvider.Apply(text);
         text.fontSize = size;
         text.color = Color.white;
         text.alignment = alignment;
