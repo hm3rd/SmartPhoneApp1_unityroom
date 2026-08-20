@@ -19,6 +19,13 @@ public sealed class CharacterSceneController : MonoBehaviour
     [SerializeField] private GameObject characterPlaceholder;
     [SerializeField] private float slideSeconds = 0.25f;
 
+    [Header("Text Size")]
+    [Min(20)] [SerializeField] private int characterNameFontSize = 42;
+    [Min(16)] [SerializeField] private int statusFontSize = 30;
+    [Min(16)] [SerializeField] private int descriptionFontSize = 26;
+    [Min(16)] [SerializeField] private int reactionFontSize = 28;
+    [Min(16)] [SerializeField] private int buttonFontSize = 26;
+
     private CharacterData currentCharacter;
     private Vector2 shownPosition;
     private Coroutine panelAnimation;
@@ -29,9 +36,19 @@ public sealed class CharacterSceneController : MonoBehaviour
     private bool IsFormationSelection => HomeScenePanelState.HasSavedState ||
         PlayerPrefs.HasKey("CurrentSelectingSlot");
 
+    public bool IsFormationSelectionMode => IsFormationSelection;
+
+    public int CurrentFormationSlot => HomeScenePanelState.HasSavedState
+        ? HomeScenePanelState.SelectingSlot
+        : PlayerPrefs.GetInt("CurrentSelectingSlot", 0);
+
+    public bool CanClearCurrentFormationSlot =>
+        IsFormationSelection && CurrentFormationSlot > 0;
+
     private void Awake()
     {
         if (!HasRequiredReferences()) BuildDefaultDetailPanel();
+        ApplyConfiguredTextSizes();
         if (portraitLayout == null)
         {
             Canvas ownerCanvas = characterImage.GetComponentInParent<Canvas>();
@@ -122,10 +139,29 @@ public sealed class CharacterSceneController : MonoBehaviour
         SceneManager.LoadScene(string.IsNullOrEmpty(sceneName) ? "HomeScene" : sceneName);
     }
 
+    /// <summary>StagePreparePanel で編集中のスロットを未選択に戻す。</summary>
+    public void ClearCurrentFormationSlot()
+    {
+        if (!CanClearCurrentFormationSlot) return;
+
+        int slotIndex = CurrentFormationSlot;
+        PlayerPrefs.SetInt($"SelectedCharacterId_{slotIndex}", -1);
+        PlayerPrefs.SetString($"SelectedCharacterName_{slotIndex}", string.Empty);
+        PlayerPrefs.DeleteKey("TempSelectedCharacterId");
+        PlayerPrefs.DeleteKey("TempSelectedCharacterName");
+        PlayerPrefs.DeleteKey("TempSelectedCharacterIconId");
+        PlayerPrefs.Save();
+
+        string sceneName = HomeScenePanelState.HasSavedState
+            ? HomeScenePanelState.ReturnSceneName
+            : PlayerPrefs.GetString("ReturnSceneName", "HomeScene");
+        SceneManager.LoadScene(string.IsNullOrEmpty(sceneName) ? "HomeScene" : sceneName);
+    }
+
     private string BuildStatusText(CharacterData data)
     {
         // 新しいステータスを追加する場合は、この表示モデルだけを拡張する。
-        return $"HP  {data.maxHP}\n移動速度  {data.moveSpeed:0.##}\n使用可能な攻撃  {data.availableAttacks.Count}";
+        return $"体力  {data.maxHP}\n移動速度  {data.moveSpeed:0.##}\n使用可能な攻撃  {data.availableAttacks.Count}";
     }
 
     private void StartPanelAnimation(bool show)
@@ -208,13 +244,13 @@ public sealed class CharacterSceneController : MonoBehaviour
         placeholderButton.transition = Selectable.Transition.None;
         placeholderButton.onClick.AddListener(ReactToCharacter);
 
-        nameText = CreateText("CharacterName", detailPanel, 34, TextAnchor.MiddleCenter);
+        nameText = CreateText("CharacterName", detailPanel, characterNameFontSize, TextAnchor.MiddleCenter);
         SetRect(nameText.rectTransform, new Vector2(0.05f, 0.85f), new Vector2(0.95f, 0.97f));
-        statusText = CreateText("Status", detailPanel, 25, TextAnchor.UpperLeft);
+        statusText = CreateText("Status", detailPanel, statusFontSize, TextAnchor.UpperLeft);
         SetRect(statusText.rectTransform, new Vector2(0.56f, 0.55f), new Vector2(0.94f, 0.82f));
-        descriptionText = CreateText("Description", detailPanel, 21, TextAnchor.UpperLeft);
+        descriptionText = CreateText("Description", detailPanel, descriptionFontSize, TextAnchor.UpperLeft);
         SetRect(descriptionText.rectTransform, new Vector2(0.56f, 0.24f), new Vector2(0.94f, 0.53f));
-        reactionText = CreateText("Reaction", detailPanel, 22, TextAnchor.MiddleCenter);
+        reactionText = CreateText("Reaction", detailPanel, reactionFontSize, TextAnchor.MiddleCenter);
         SetRect(reactionText.rectTransform, new Vector2(0.05f, 0.04f), new Vector2(0.55f, 0.14f));
 
         Button close = CreateButton("CloseButton", detailPanel, "閉じる", ClosePanel);
@@ -274,6 +310,30 @@ public sealed class CharacterSceneController : MonoBehaviour
         SetRect(question.rectTransform, Vector2.zero, Vector2.one);
         placeholder.SetActive(false);
         return placeholder;
+    }
+
+    private void ApplyConfiguredTextSizes()
+    {
+        ConfigureText(nameText, characterNameFontSize);
+        ConfigureText(statusText, statusFontSize);
+        ConfigureText(descriptionText, descriptionFontSize);
+        ConfigureText(reactionText, reactionFontSize);
+
+        if (detailPanel == null) return;
+        foreach (Button button in detailPanel.GetComponentsInChildren<Button>(true))
+        {
+            ConfigureText(button.GetComponentInChildren<Text>(true), buttonFontSize);
+        }
+    }
+
+    private static void ConfigureText(Text text, int size)
+    {
+        if (text == null) return;
+        JapaneseFontProvider.Apply(text);
+        text.fontSize = size;
+        text.resizeTextForBestFit = true;
+        text.resizeTextMinSize = Mathf.Max(14, Mathf.RoundToInt(size * 0.65f));
+        text.resizeTextMaxSize = size;
     }
 
     private static void SetRect(RectTransform rect, Vector2 min, Vector2 max)

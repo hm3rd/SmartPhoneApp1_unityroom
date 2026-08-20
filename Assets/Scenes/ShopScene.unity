@@ -640,7 +640,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: HOME
+  m_Text: "\u30DB\u30FC\u30E0"
 --- !u!222 &2148020129833057221
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -789,7 +789,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Shop1
+  m_Text: "\u5546\u54C11"
 --- !u!1 &2976599681772589190
 GameObject:
   m_ObjectHideFlags: 0
@@ -1144,7 +1144,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Shop2
+  m_Text: "\u5546\u54C12"
 --- !u!224 &6195747850927344638
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1465,7 +1465,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Shop3
+  m_Text: "\u5546\u54C13"
 --- !u!222 &8755761526950260931
 CanvasRenderer:
   m_ObjectHideFlags: 0

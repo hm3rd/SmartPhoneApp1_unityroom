@@ -38,6 +38,13 @@ public class Gatya : MonoBehaviour
     [SerializeField] private Transform resultContainer;
     [SerializeField] private Text messageText;
 
+    [Header("Text Size")]
+    [Min(18)] [SerializeField] private int buttonFontSize = 32;
+    [Min(18)] [SerializeField] private int stoneFontSize = 32;
+    [Min(20)] [SerializeField] private int messageFontSize = 42;
+    [Min(16)] [SerializeField] private int singleResultNameFontSize = 34;
+    [Min(14)] [SerializeField] private int tenResultNameFontSize = 22;
+
     [Header("演出")]
     [Min(0f)] [SerializeField] private float introDuration = 0.25f;
     [Min(0f)] [SerializeField] private float characterInterval = 0.25f;
@@ -64,6 +71,10 @@ public class Gatya : MonoBehaviour
         EnsureOverlayCanvas();
         EnsureStoneUI();
         EnsureResultUI();
+        ConfigureExistingButtonText(singlePullButton);
+        ConfigureExistingButtonText(tenPullButton);
+        ConfigureText(stoneText, stoneFontSize);
+        ConfigureText(messageText, messageFontSize);
 
         if (singlePullButton != null) singlePullButton.onClick.AddListener(PullOnce);
         if (tenPullButton != null) tenPullButton.onClick.AddListener(PullTen);
@@ -247,7 +258,7 @@ public class Gatya : MonoBehaviour
         resultPanel.GetComponent<Image>().color = new Color(0.05f, 0.04f, 0.12f, 0.94f);
         resultPanel.GetComponent<Button>().onClick.AddListener(CloseResults);
 
-        GameObject title = CreateTextObject("Message", resultPanel.transform, 34);
+        GameObject title = CreateTextObject("Message", resultPanel.transform, messageFontSize);
         RectTransform titleRect = title.GetComponent<RectTransform>();
         titleRect.anchorMin = new Vector2(0.1f, 0.82f);
         titleRect.anchorMax = new Vector2(0.9f, 0.96f);
@@ -298,7 +309,7 @@ public class Gatya : MonoBehaviour
     {
         if (stoneText != null) return;
 
-        GameObject stoneObject = CreateTextObject("StoneAmount", overlayRoot, 28);
+        GameObject stoneObject = CreateTextObject("StoneAmount", overlayRoot, stoneFontSize);
         RectTransform rect = stoneObject.GetComponent<RectTransform>();
         rect.anchorMin = new Vector2(0.68f, 0.9f);
         rect.anchorMax = new Vector2(0.96f, 0.98f);
@@ -351,13 +362,16 @@ public class Gatya : MonoBehaviour
         icon.sprite = character.characterIcon;
         icon.preserveAspect = true;
 
-        GameObject label = CreateTextObject("Name", item.transform, resultCount == 1 ? 24 : 15);
+        GameObject label = CreateTextObject(
+            "Name",
+            item.transform,
+            resultCount == 1 ? singleResultNameFontSize : tenResultNameFontSize);
         RectTransform labelRect = label.GetComponent<RectTransform>();
         labelRect.anchorMin = new Vector2(0.02f, 0.02f);
         labelRect.anchorMax = new Vector2(0.98f, 0.25f);
         labelRect.offsetMin = labelRect.offsetMax = Vector2.zero;
         label.GetComponent<Text>().text = isNew
-            ? $"NEW! {character.characterName}"
+            ? $"初獲得！ {character.characterName}"
             : character.characterName;
 
         StartCoroutine(RevealItem(item.transform));
@@ -399,6 +413,22 @@ public class Gatya : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
+    }
+
+    private void ConfigureExistingButtonText(Button button)
+    {
+        if (button == null) return;
+        ConfigureText(button.GetComponentInChildren<Text>(true), buttonFontSize);
+    }
+
+    private static void ConfigureText(Text text, int fontSize)
+    {
+        if (text == null) return;
+        JapaneseFontProvider.Apply(text);
+        text.fontSize = fontSize;
+        text.resizeTextForBestFit = true;
+        text.resizeTextMinSize = Mathf.Max(14, Mathf.RoundToInt(fontSize * 0.65f));
+        text.resizeTextMaxSize = fontSize;
     }
 
     private void ShowMessage(string message)

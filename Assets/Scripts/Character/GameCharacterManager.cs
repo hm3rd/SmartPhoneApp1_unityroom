@@ -110,6 +110,7 @@ public class GameCharacterManager : MonoBehaviour
             
             if (characterButtons[i] != null)
             {
+                characterButtons[i].gameObject.SetActive(HasCharacterInSlot(i));
                 characterButtons[i].onClick.AddListener(() => OnCharacterButtonClicked(index));
             }
 
@@ -265,6 +266,13 @@ public class GameCharacterManager : MonoBehaviour
     {
         if (slotIndex < 0 || slotIndex >= CHARACTER_SLOT_COUNT) return 0;
         return characterMaxHp[slotIndex];
+    }
+
+    /// <summary>指定スロットに選択済みキャラクターがいるか。</summary>
+    public bool HasCharacterInSlot(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= CHARACTER_SLOT_COUNT) return false;
+        return characterIds[slotIndex] != INVALID_CHARACTER_ID;
     }
 
     /// <summary>

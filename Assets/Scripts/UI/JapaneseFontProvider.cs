@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
+using UnityEngine.TextCore.LowLevel;
 
 /// <summary>
 /// WebGLにも同梱される日本語Fontを、シーン配置済み／自動生成のLegacy Textへ共通適用する。
@@ -12,6 +14,7 @@ public static class JapaneseFontProvider
     private static Font japaneseFont;
     private static bool loadAttempted;
     private static bool warningLogged;
+    private static TMP_FontAsset japaneseTmpFont;
 
     public static Font Font
     {
@@ -34,9 +37,38 @@ public static class JapaneseFontProvider
         }
     }
 
+    public static TMP_FontAsset TMPFont
+    {
+        get
+        {
+            if (japaneseTmpFont == null && Font != null)
+            {
+                japaneseTmpFont = TMP_FontAsset.CreateFontAsset(
+                    Font,
+                    90,
+                    9,
+                    GlyphRenderMode.SDFAA,
+                    1024,
+                    1024,
+                    AtlasPopulationMode.Dynamic);
+                japaneseTmpFont.name = "JapaneseFont Runtime SDF";
+                japaneseTmpFont.isMultiAtlasTexturesEnabled = true;
+
+                // 後からInstantiateされるTMPテキストも日本語へフォールバックできるようにする。
+                if (TMP_Settings.fallbackFontAssets != null &&
+                    !TMP_Settings.fallbackFontAssets.Contains(japaneseTmpFont))
+                {
+                    TMP_Settings.fallbackFontAssets.Add(japaneseTmpFont);
+                }
+            }
+            return japaneseTmpFont;
+        }
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Register()
     {
+        _ = TMPFont;
         SceneManager.sceneLoaded -= OnSceneLoaded;
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
@@ -53,6 +85,13 @@ public static class JapaneseFontProvider
         if (font != null) text.font = font;
     }
 
+    public static void Apply(TMP_Text text)
+    {
+        if (text == null) return;
+        TMP_FontAsset font = TMPFont;
+        if (font != null) text.font = font;
+    }
+
     private static void ApplyToScene(Scene scene)
     {
         Font font = Font;
@@ -64,6 +103,16 @@ public static class JapaneseFontProvider
             if (text != null && text.gameObject.scene == scene)
             {
                 text.font = font;
+            }
+        }
+
+
+        TMP_Text[] tmpTexts = Resources.FindObjectsOfTypeAll<TMP_Text>();
+        foreach (TMP_Text text in tmpTexts)
+        {
+            if (text != null && text.gameObject.scene == scene)
+            {
+                text.font = TMPFont;
             }
         }
     }

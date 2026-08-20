@@ -669,7 +669,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: "\rtutorial"
+  m_Text: "\u30C1\u30E5\u30FC\u30C8\u30EA\u30A2\u30EB"
 --- !u!222 &1483127429
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -885,7 +885,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Start
+  m_Text: "\u30B9\u30BF\u30FC\u30C8"
 --- !u!222 &2057578502
 CanvasRenderer:
   m_ObjectHideFlags: 0

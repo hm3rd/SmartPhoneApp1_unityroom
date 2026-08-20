@@ -15,6 +15,8 @@ public class StoneAmountDisplay : MonoBehaviour
     {
         if (legacyText == null) legacyText = GetComponent<Text>();
         if (tmpText == null) tmpText = GetComponent<TMP_Text>();
+        JapaneseFontProvider.Apply(legacyText);
+        JapaneseFontProvider.Apply(tmpText);
     }
 
     private void OnEnable()

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 [System.Serializable]
@@ -99,10 +100,22 @@ public class NewStageManager : MonoBehaviour
     private SpriteRenderer playerSpriteRenderer;
     private GameResultPanelController resultController;
     private float stageStartTime;
+    [Header("開始・クリア演出")]
+    [SerializeField] private StageAnnouncementController announcementController;
+
+    [Header("最終撃破スロー演出")]
+    [Range(0.05f, 1f)] [SerializeField] private float finishingSlowScale = 0.2f;
+    [Min(0.1f)] [SerializeField] private float finishingSlowDuration = 1.2f;
+    [Min(0.01f)] [SerializeField] private float finishingZoomInDuration = 0.25f;
+    [Min(0.01f)] [SerializeField] private float finishingZoomOutDuration = 0.2f;
+    [Range(0.3f, 1f)] [SerializeField] private float finishingZoomMultiplier = 0.72f;
+    [Range(0f, 1f)] [SerializeField] private float finishingCameraFocus = 0.45f;
+    private bool stageReady;
+    private bool clearSequenceStarted;
+    private float completedClearTime;
 
     void Start()
     {
-    stageStartTime = Time.time;
     // 他スクリプト（StageSelector）から送られたステージ番号を取得
     targetStageIndex = PlayerPrefs.GetInt("SelectedStageIndex", 0);
 
@@ -132,11 +145,24 @@ public class NewStageManager : MonoBehaviour
         resultPanel.SetActive(false);
     }
     SetMoveRightPrompt(false);
+    announcementController = announcementController != null
+        ? announcementController
+        : GetComponent<StageAnnouncementController>();
+    if (announcementController == null)
+        announcementController = gameObject.AddComponent<StageAnnouncementController>();
+
+    announcementController.PlayStart(() =>
+    {
+        stageStartTime = Time.time;
+        stageReady = true;
+    });
     }
 
 
     void Update()
     {
+        if (!stageReady || clearSequenceStarted) return;
+
         if (isStageCleared)
         {
             if (resultPanel != null && !resultPanel.activeSelf)
@@ -284,8 +310,112 @@ public class NewStageManager : MonoBehaviour
 
     private void CompleteStage()
     {
-        isStageCleared = true;
+        if (isStageCleared || clearSequenceStarted) return;
+        clearSequenceStarted = true;
+        stageReady = false;
+        completedClearTime = Mathf.Max(0f, Time.time - stageStartTime);
         SetMoveRightPrompt(false);
+        StartCoroutine(PlayFinishingBlowSequence());
+    }
+
+    private IEnumerator PlayFinishingBlowSequence()
+    {
+        float originalTimeScale = Time.timeScale;
+        Vector3 originalCameraPosition = stageCamera != null
+            ? stageCamera.transform.position
+            : Vector3.zero;
+        float originalCameraSize = stageCamera != null && stageCamera.orthographic
+            ? stageCamera.orthographicSize
+            : 0f;
+        float originalFieldOfView = stageCamera != null
+            ? stageCamera.fieldOfView
+            : 0f;
+
+        Time.timeScale = finishingSlowScale;
+        yield return AnimateFinishingCamera(
+            originalCameraPosition,
+            originalCameraSize,
+            originalFieldOfView,
+            true,
+            finishingZoomInDuration);
+
+        float holdDuration = Mathf.Max(
+            0f,
+            finishingSlowDuration - finishingZoomInDuration - finishingZoomOutDuration);
+        if (holdDuration > 0f)
+            yield return new WaitForSecondsRealtime(holdDuration);
+
+        yield return AnimateFinishingCamera(
+            originalCameraPosition,
+            originalCameraSize,
+            originalFieldOfView,
+            false,
+            finishingZoomOutDuration);
+
+        Time.timeScale = originalTimeScale;
+        announcementController.PlayClear(FinalizeStageClear);
+    }
+
+    private IEnumerator AnimateFinishingCamera(
+        Vector3 originalPosition,
+        float originalSize,
+        float originalFieldOfView,
+        bool zoomIn,
+        float duration)
+    {
+        if (stageCamera == null) yield break;
+
+        Vector3 startPosition = stageCamera.transform.position;
+        float startSize = stageCamera.orthographicSize;
+        float startFieldOfView = stageCamera.fieldOfView;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
+            Vector3 focusPosition = originalPosition;
+            if (player != null)
+            {
+                focusPosition = Vector3.Lerp(
+                    originalPosition,
+                    new Vector3(
+                        player.transform.position.x,
+                        player.transform.position.y,
+                        originalPosition.z),
+                    finishingCameraFocus);
+            }
+
+            Vector3 targetPosition = zoomIn ? focusPosition : originalPosition;
+            stageCamera.transform.position = Vector3.Lerp(startPosition, targetPosition, t);
+            if (stageCamera.orthographic)
+            {
+                float targetSize = zoomIn
+                    ? originalSize * finishingZoomMultiplier
+                    : originalSize;
+                stageCamera.orthographicSize = Mathf.Lerp(startSize, targetSize, t);
+            }
+            else
+            {
+                float targetFieldOfView = zoomIn
+                    ? originalFieldOfView * finishingZoomMultiplier
+                    : originalFieldOfView;
+                stageCamera.fieldOfView = Mathf.Lerp(startFieldOfView, targetFieldOfView, t);
+            }
+            yield return null;
+        }
+
+        if (!zoomIn)
+        {
+            stageCamera.transform.position = originalPosition;
+            if (stageCamera.orthographic) stageCamera.orthographicSize = originalSize;
+            else stageCamera.fieldOfView = originalFieldOfView;
+        }
+    }
+
+    private void FinalizeStageClear()
+    {
+        isStageCleared = true;
         if (resultPanel != null)
         {
             resultPanel.SetActive(true);
@@ -304,7 +434,7 @@ public class NewStageManager : MonoBehaviour
 
         if (resultController != null)
         {
-            float clearTime = Mathf.Max(0f, Time.time - stageStartTime);
+            float clearTime = completedClearTime;
             float remainingHealthRatio = CalculatePartyHealthRatio();
             string evaluation = EvaluateClearRank(remainingHealthRatio);
             resultController.Show(

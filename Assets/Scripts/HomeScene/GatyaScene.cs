@@ -34,8 +34,8 @@ public class GatyaScene : MonoBehaviour
         int result = Random.Range(1, 4);
         if (resultText != null)
         {
-            if (result == 1) resultText.text = "★レアキャラGET！";
-            else if (result == 2) resultText.text = "★アイテムGET！";
+            if (result == 1) resultText.text = "★レアキャラ獲得！";
+            else if (result == 2) resultText.text = "★アイテム獲得！";
             else resultText.text = "★はずれ…";
         }
     }

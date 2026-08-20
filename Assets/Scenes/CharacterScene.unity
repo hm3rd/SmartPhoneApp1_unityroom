@@ -603,7 +603,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: HOME
+  m_Text: "\u30DB\u30FC\u30E0"
 --- !u!222 &1068286336
 CanvasRenderer:
   m_ObjectHideFlags: 0

@@ -49,7 +49,7 @@ public static class CharacterMenuBootstrap
         labelRect.offsetMin = labelRect.offsetMax = Vector2.zero;
         Text label = labelObject.GetComponent<Text>();
         JapaneseFontProvider.Apply(label);
-        label.text = "MENU";
+        label.text = "メニュー";
         label.fontSize = 28;
         label.alignment = TextAnchor.MiddleCenter;
         label.color = Color.white;

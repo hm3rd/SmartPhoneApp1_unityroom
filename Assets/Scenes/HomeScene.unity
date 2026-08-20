@@ -189,7 +189,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: start
+  m_Text: "\u958B\u59CB"
 --- !u!222 &19235658
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -375,7 +375,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Button
+  m_Text: "\u30DC\u30BF\u30F3"
 --- !u!222 &52586923
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1139,7 +1139,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: BACK
+  m_Text: "\u623B\u308B"
 --- !u!222 &229620839
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1218,7 +1218,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: character
+  m_Text: "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC"
 --- !u!222 &255482340
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1855,7 +1855,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Stage1
+  m_Text: "\u30B9\u30C6\u30FC\u30B81"
 --- !u!222 &384725307
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1934,7 +1934,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Button
+  m_Text: "\u30DC\u30BF\u30F3"
 --- !u!222 &397069961
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2193,7 +2193,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Item
+  m_Text: "\u30A2\u30A4\u30C6\u30E0"
 --- !u!222 &605860742
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2559,7 +2559,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Stage2
+  m_Text: "\u30B9\u30C6\u30FC\u30B82"
 --- !u!222 &697578538
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3214,7 +3214,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: HOME
+  m_Text: "\u30DB\u30FC\u30E0"
 --- !u!222 &901544500
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3293,7 +3293,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: HOME
+  m_Text: "\u30DB\u30FC\u30E0"
 --- !u!222 &912467183
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3785,7 +3785,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Button
+  m_Text: "\u30DC\u30BF\u30F3"
 --- !u!222 &1093385993
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3864,7 +3864,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Stage3
+  m_Text: "\u30B9\u30C6\u30FC\u30B83"
 --- !u!222 &1105552192
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -5312,7 +5312,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: equipment
+  m_Text: "\u88C5\u5099"
 --- !u!222 &1734314154
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -5968,7 +5968,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: HOME
+  m_Text: "\u30DB\u30FC\u30E0"
 --- !u!222 &1877709801
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -6547,7 +6547,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: wepon
+  m_Text: "\u6B66\u5668"
 --- !u!222 &2114478039
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -6701,7 +6701,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Shop
+  m_Text: "\u30B7\u30E7\u30C3\u30D7"
 --- !u!222 &2129329562
 CanvasRenderer:
   m_ObjectHideFlags: 0

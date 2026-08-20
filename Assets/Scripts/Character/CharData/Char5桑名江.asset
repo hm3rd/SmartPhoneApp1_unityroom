@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "Char5\u6851\u540D\u6C5F"
   m_EditorClassIdentifier: 
   characterId: 5
-  characterName: "\u6851\u540D\u8C6A"
+  characterName: "\u6851\u540D\u6C5F"
   description: 
   characterSprite: {fileID: 0}
   canBeObtainedFromGacha: 1

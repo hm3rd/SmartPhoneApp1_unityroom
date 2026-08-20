@@ -30,7 +30,7 @@ public sealed class GameResultPanelController : MonoBehaviour, IPointerClickHand
         float seconds = clearTimeSeconds - minutes * 60f;
         resultText.text =
             $"クリアタイム　{minutes:00}:{seconds:00.00}\n" +
-            $"評価　{evaluation}　（残りHP {remainingHealthRatio * 100f:0}%）\n" +
+            $"評価　{evaluation}　（残り体力 {remainingHealthRatio * 100f:0}%）\n" +
             $"倒した敵　{defeatedEnemies}体\n" +
             $"与えたダメージ　{totalDamage:N0}\n" +
             $"獲得した石　{earnedStones}個";
@@ -125,7 +125,7 @@ public sealed class GameResultPanelController : MonoBehaviour, IPointerClickHand
         background.raycastTarget = true;
 
         Text title = CreateText("ResultTitle", transform, 48, TextAnchor.MiddleCenter);
-        title.text = "STAGE CLEAR";
+        title.text = "任務完了";
         title.resizeTextForBestFit = true;
         title.resizeTextMinSize = 24;
         title.resizeTextMaxSize = 48;
@@ -156,6 +156,7 @@ public sealed class GameResultPanelController : MonoBehaviour, IPointerClickHand
 
         retryButton = CreateButton("RetryButton", transform, "再出撃", RetryStage);
         SetRect(retryButton.GetComponent<RectTransform>(), new Vector2(0.39f, 0.04f), new Vector2(0.61f, 0.13f));
+        retryButton.transform.SetAsLastSibling();
 
         Text guide = CreateText("ExitGuide", transform, 18, TextAnchor.LowerRight);
         guide.text = "画面をタップしてホームへ";
@@ -193,8 +194,14 @@ public sealed class GameResultPanelController : MonoBehaviour, IPointerClickHand
         button.onClick.AddListener(action);
         Text text = CreateText("Text", obj.transform, 26, TextAnchor.MiddleCenter);
         text.text = label;
+        text.resizeTextForBestFit = true;
+        text.resizeTextMinSize = 18;
+        text.resizeTextMaxSize = 26;
         text.raycastTarget = false;
         SetRect(text.rectTransform, Vector2.zero, Vector2.one);
+        Outline outline = text.gameObject.AddComponent<Outline>();
+        outline.effectColor = new Color(0f, 0f, 0f, 0.75f);
+        outline.effectDistance = new Vector2(1.5f, -1.5f);
         return button;
     }
 

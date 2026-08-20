@@ -204,7 +204,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: New Text
+  m_Text: "\u30C6\u30AD\u30B9\u30C8"
 --- !u!222 &102838815
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -431,7 +431,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: New Text
+  m_Text: "\u30C6\u30AD\u30B9\u30C8"
 --- !u!222 &152909773
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -650,6 +650,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -1612,7 +1613,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: HOME
+  m_Text: "\u30DB\u30FC\u30E0"
 --- !u!222 &1514487412
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1968,6 +1969,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -2014,6 +2016,11 @@ MonoBehaviour:
   pickupPool:
   - {fileID: 11400000, guid: 9ffe912eab2f71f4a9fb4944f3b5c669, type: 2}
   - {fileID: 11400000, guid: ff9f876fe9b7a914a9789f0d133f382f, type: 2}
+  - {fileID: 11400000, guid: 81dc779407b058b41add277d2199b8a0, type: 2}
+  - {fileID: 11400000, guid: 73eee08c8c7645f4587f238205c6a3d4, type: 2}
+  - {fileID: 11400000, guid: 7937e6fb140c4b34b84baaf1713b21e9, type: 2}
+  - {fileID: 11400000, guid: 4c6921df3deb79d4a914d4aca98bf642, type: 2}
+  - {fileID: 11400000, guid: 74b82358d0026ca42ae96cb8be4a49d6, type: 2}
   - {fileID: 0}
   singleCost: 3
   tenPullCost: 30

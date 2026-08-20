@@ -66,7 +66,7 @@ public class CharacterListItem : MonoBehaviour
         // HP設定
         if (hpText != null)
         {
-            hpText.text = $"HP: {characterData.maxHP}";
+            hpText.text = $"体力: {characterData.maxHP}";
         }
         
         // 説明設定

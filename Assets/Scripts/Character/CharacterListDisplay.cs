@@ -12,6 +12,9 @@ public class CharacterListDisplay : MonoBehaviour
     [SerializeField] private bool autoAddGridLayout = true; // グリッドレイアウト自動付与
     [SerializeField] private int columnCount = 6; // 6列固定
     [SerializeField] private float cellSize = 150f; // 正方形セルサイズ
+    [Header("Text Size")]
+    [Min(12f)] [SerializeField] private float characterNameFontSize = 24f;
+    [Min(10f)] [SerializeField] private float characterNameMinimumFontSize = 16f;
     
     void Start()
     {
@@ -67,6 +70,12 @@ public class CharacterListDisplay : MonoBehaviour
         }
         
         // キャラクター分だけUIアイテムを生成
+        CharacterSceneController sceneController = FindFirstObjectByType<CharacterSceneController>();
+        if (sceneController != null && sceneController.IsFormationSelectionMode)
+        {
+            CreateClearSelectionItem(sceneController);
+        }
+
         int count = db.GetCharacterCount();
         if (count == 0)
         {
@@ -74,7 +83,6 @@ public class CharacterListDisplay : MonoBehaviour
             return;
         }
         
-        CharacterSceneController sceneController = FindFirstObjectByType<CharacterSceneController>();
         for (int i = 0; i < count; i++)
         {
             CharacterData character = db.GetCharacter(i);
@@ -223,8 +231,12 @@ public class CharacterListDisplay : MonoBehaviour
         nameRect.sizeDelta = new Vector2(cellSize - 10, 40);
 
         TextMeshProUGUI nameText = nameObj.AddComponent<TextMeshProUGUI>();
+        JapaneseFontProvider.Apply(nameText);
         nameText.text = character.characterName;
-        nameText.fontSize = 12;
+        nameText.fontSize = characterNameFontSize;
+        nameText.enableAutoSizing = true;
+        nameText.fontSizeMin = Mathf.Min(characterNameMinimumFontSize, characterNameFontSize);
+        nameText.fontSizeMax = characterNameFontSize;
         nameText.color = Color.black;
         nameText.alignment = TextAlignmentOptions.Center;
         nameText.overflowMode = TextOverflowModes.Truncate;
@@ -250,5 +262,60 @@ public class CharacterListDisplay : MonoBehaviour
         listItem.selectButton = button;
 
         return itemObj;
+    }
+
+    private void CreateClearSelectionItem(CharacterSceneController sceneController)
+    {
+        bool canClear = sceneController.CanClearCurrentFormationSlot;
+        GameObject item = new GameObject("ClearSelection");
+        item.transform.SetParent(contentPanel, false);
+
+        RectTransform rect = item.AddComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(cellSize, cellSize + 50f);
+        LayoutElement layout = item.AddComponent<LayoutElement>();
+        layout.preferredWidth = cellSize;
+        layout.preferredHeight = cellSize + 50f;
+
+        Image background = item.AddComponent<Image>();
+        background.color = canClear
+            ? new Color(0.88f, 0.32f, 0.32f, 1f)
+            : new Color(0.45f, 0.45f, 0.45f, 1f);
+
+        GameObject symbolObject = new GameObject("ClearSymbol");
+        symbolObject.transform.SetParent(item.transform, false);
+        RectTransform symbolRect = symbolObject.AddComponent<RectTransform>();
+        symbolRect.anchorMin = new Vector2(0f, 0.2f);
+        symbolRect.anchorMax = Vector2.one;
+        symbolRect.offsetMin = symbolRect.offsetMax = Vector2.zero;
+        TextMeshProUGUI symbol = symbolObject.AddComponent<TextMeshProUGUI>();
+        JapaneseFontProvider.Apply(symbol);
+        symbol.text = "×";
+        symbol.fontSize = Mathf.Max(48f, characterNameFontSize * 2f);
+        symbol.color = Color.white;
+        symbol.alignment = TextAlignmentOptions.Center;
+        symbol.raycastTarget = false;
+
+        GameObject labelObject = new GameObject("Label");
+        labelObject.transform.SetParent(item.transform, false);
+        RectTransform labelRect = labelObject.AddComponent<RectTransform>();
+        labelRect.anchorMin = Vector2.zero;
+        labelRect.anchorMax = new Vector2(1f, 0.25f);
+        labelRect.offsetMin = labelRect.offsetMax = Vector2.zero;
+        TextMeshProUGUI label = labelObject.AddComponent<TextMeshProUGUI>();
+        JapaneseFontProvider.Apply(label);
+        label.text = canClear ? "選択解除" : "解除不可";
+        label.fontSize = characterNameFontSize;
+        label.enableAutoSizing = true;
+        label.fontSizeMin = characterNameMinimumFontSize;
+        label.fontSizeMax = characterNameFontSize;
+        label.color = Color.white;
+        label.alignment = TextAlignmentOptions.Center;
+        label.raycastTarget = false;
+
+        Button button = item.AddComponent<Button>();
+        button.targetGraphic = background;
+        button.interactable = canClear;
+        if (canClear)
+            button.onClick.AddListener(sceneController.ClearCurrentFormationSlot);
     }
 }
