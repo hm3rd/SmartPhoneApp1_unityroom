@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 
 /// <summary>
 /// CharacterSceneでキャラクター一覧をScroll Viewに表示
@@ -12,6 +13,18 @@ public class CharacterListDisplay : MonoBehaviour
     [SerializeField] private bool autoAddGridLayout = true; // グリッドレイアウト自動付与
     [SerializeField] private int columnCount = 6; // 6列固定
     [SerializeField] private float cellSize = 150f; // 正方形セルサイズ
+
+    [Header("表示するキャラクター")]
+    [Tooltip("ONの場合、下のDisplay Charactersに登録したキャラクターを登録順で表示します")]
+    [SerializeField] private bool useInspectorDisplayList;
+
+    [Tooltip("CharacterSceneへ表示するキャラクターと並び順。空の場合は獲得済み全キャラクターを表示します")]
+    [SerializeField] private List<CharacterData> displayCharacters =
+        new List<CharacterData>();
+
+    [Tooltip("ONの場合、Display Charactersに登録されていても未獲得キャラクターは表示しません")]
+    [SerializeField] private bool showOwnedCharactersOnly = true;
+
     [Header("Text Size")]
     [Min(12f)] [SerializeField] private float characterNameFontSize = 24f;
     [Min(10f)] [SerializeField] private float characterNameMinimumFontSize = 16f;
@@ -76,16 +89,20 @@ public class CharacterListDisplay : MonoBehaviour
             CreateClearSelectionItem(sceneController);
         }
 
-        int count = db.GetCharacterCount();
+        List<CharacterData> charactersToDisplay =
+            BuildDisplayCharacterList(db);
+        int count = charactersToDisplay.Count;
         if (count == 0)
         {
-            Debug.LogWarning("CharacterDatabaseにキャラクターが登録されていません！");
+            Debug.LogWarning(
+                "CharacterSceneに表示できるキャラクターがいません。" +
+                "Display Charactersと獲得状態を確認してください。");
             return;
         }
         
         for (int i = 0; i < count; i++)
         {
-            CharacterData character = db.GetCharacter(i);
+            CharacterData character = charactersToDisplay[i];
             if (character == null)
             {
                 Debug.LogWarning($"CharacterData[{i}] が null です");
@@ -110,6 +127,57 @@ public class CharacterListDisplay : MonoBehaviour
         }
         
         Debug.Log($"DisplayCharacters() 完了。{count}体のキャラクターを表示しました。");
+    }
+
+    private List<CharacterData> BuildDisplayCharacterList(
+        CharacterDatabase database)
+    {
+        List<CharacterData> result = new List<CharacterData>();
+        HashSet<int> addedIds = new HashSet<int>();
+
+        bool useInspectorList = useInspectorDisplayList &&
+            displayCharacters != null &&
+            displayCharacters.Count > 0;
+
+        if (useInspectorList)
+        {
+            foreach (CharacterData character in displayCharacters)
+            {
+                if (character == null ||
+                    !addedIds.Add(character.characterId))
+                {
+                    continue;
+                }
+
+                if (showOwnedCharactersOnly &&
+                    !database.IsOwned(character.characterId))
+                {
+                    continue;
+                }
+
+                result.Add(character);
+            }
+            return result;
+        }
+
+        for (int i = 0; i < database.GetCharacterCount(); i++)
+        {
+            CharacterData character = database.GetCharacter(i);
+            if (character != null && addedIds.Add(character.characterId))
+            {
+                result.Add(character);
+            }
+        }
+        return result;
+    }
+
+    [ContextMenu("キャラクター一覧を再表示")]
+    public void RefreshDisplay()
+    {
+        if (isActiveAndEnabled && contentPanel != null)
+        {
+            DisplayCharacters();
+        }
     }
     
     void EnsureGridLayout()

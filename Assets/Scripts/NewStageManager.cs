@@ -76,6 +76,10 @@ public class NewStageManager : MonoBehaviour
     [Tooltip("サブステージクリア後に表示する「右へ移動」案内画像")]
     [SerializeField] private GameObject moveRightPrompt;
 
+    [Header("コンボ表示")]
+    [Tooltip("敵の連続撃破表示。未設定ならシーンから自動検索します")]
+    [SerializeField] private EnemyComboDisplay comboDisplay;
+
     public bool debugLogs = false;
 
     // ✅ 他スクリプトからセットされる整数ステージ番号
@@ -126,6 +130,10 @@ public class NewStageManager : MonoBehaviour
     }
 
     targetStage = allStages[targetStageIndex];
+    if (comboDisplay == null)
+        comboDisplay = FindFirstObjectByType<EnemyComboDisplay>();
+    if (comboDisplay == null)
+        comboDisplay = gameObject.AddComponent<EnemyComboDisplay>();
     if (stageCamera == null)
         stageCamera = Camera.main;
     if (player != null)
@@ -266,6 +274,8 @@ public class NewStageManager : MonoBehaviour
     {
         defeatedEnemyCount++;
         totalDefeatedEnemyCount++;
+        if (comboDisplay != null)
+            comboDisplay.RegisterKill();
         if (debugLogs)
         {
             Debug.Log(
@@ -510,6 +520,8 @@ public class NewStageManager : MonoBehaviour
         spawnedEnemyCount = 0;
         defeatedEnemyCount = 0;
         isSubStageCleared = false;
+        if (comboDisplay != null)
+            comboDisplay.ResetCombo();
         SetMoveRightPrompt(false);
         timer = 0f;
         BuildSpawnQueue(info);

@@ -3512,6 +3512,7 @@ GameObject:
   - component: {fileID: 1021397982}
   - component: {fileID: 1021397986}
   - component: {fileID: 1021397987}
+  - component: {fileID: 1021397988}
   m_Layer: 5
   m_Name: UICanvas
   m_TagString: Untagged
@@ -3640,6 +3641,68 @@ MonoBehaviour:
   anchor: {x: 1, y: 1}
   anchoredPosition: {x: 0, y: 0}
   size: {x: 100, y: 50}
+--- !u!114 &1021397988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1021397981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfa3122a6d124411afd09bf05886c547, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  menuButton: {fileID: 0}
+  menuPanel: {fileID: 0}
+  buttonContainer: {fileID: 0}
+  closeButton: {fileID: 0}
+  menuItemButtonPrefab: {fileID: 0}
+  buildMissingUIAutomatically: 1
+  menuButtonLabel: "\u30E1\u30CB\u30E5\u30FC"
+  menuButtonSize: {x: 190, y: 100}
+  menuButtonAnchor: {x: 1, y: 1}
+  menuButtonPivot: {x: 0.8, y: 0.7}
+  menuButtonPosition: {x: -24, y: -24}
+  itemButtonSize: {x: 360, y: 72}
+  itemSpacing: 14
+  fontSize: 34
+  menuEntries:
+  - label: "\u30DB\u30FC\u30E0"
+    actionType: 2
+    sceneName: 
+    targetPanel: {fileID: 0}
+    targetObjectName: 
+    closeMenuAfterAction: 1
+    interactable: 1
+  - label: "\u51FA\u6483"
+    actionType: 1
+    sceneName: 
+    targetPanel: {fileID: 1503596697}
+    targetObjectName: StageSelectPanel
+    closeMenuAfterAction: 1
+    interactable: 1
+  - label: "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC"
+    actionType: 0
+    sceneName: CharacterScene
+    targetPanel: {fileID: 0}
+    targetObjectName: 
+    closeMenuAfterAction: 1
+    interactable: 1
+  - label: "\u30AC\u30C1\u30E3"
+    actionType: 0
+    sceneName: GatyaScene
+    targetPanel: {fileID: 0}
+    targetObjectName: 
+    closeMenuAfterAction: 1
+    interactable: 1
+  - label: "\u30B7\u30E7\u30C3\u30D7"
+    actionType: 0
+    sceneName: ShopScene
+    targetPanel: {fileID: 0}
+    targetObjectName: 
+    closeMenuAfterAction: 1
+    interactable: 1
 --- !u!1 &1068958226
 GameObject:
   m_ObjectHideFlags: 0

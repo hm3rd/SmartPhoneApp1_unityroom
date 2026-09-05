@@ -275,9 +275,13 @@ public class Character_behavior : MonoBehaviour
             textRect.sizeDelta = -PhraseBubblePadding;
         }
 
-        phraseBubbleImage.sprite = phraseBubbleSprite;
+        // Inspectorで設定したCharacterScene側の画像を、未設定Spriteで消さない。
+        if (phraseBubbleSprite != null)
+        {
+            phraseBubbleImage.sprite = phraseBubbleSprite;
+        }
         phraseBubbleImage.color = Color.white;
-        phraseBubbleImage.type = phraseBubbleSprite != null
+        phraseBubbleImage.type = phraseBubbleImage.sprite != null
             ? Image.Type.Sliced
             : Image.Type.Simple;
         phraseBubbleImage.raycastTarget = false;
@@ -406,10 +410,15 @@ public class Character_behavior : MonoBehaviour
     /// CharacterScene の UI ImageでもHomeSceneと同じ反応処理を利用するための設定。
     /// UIではワールド座標の当たり判定を止め、ButtonからReactToTouchを呼び出す。
     /// </summary>
-    public void ConfigureForCharacterUI(CharacterData character, Text reactionLabel, float uiJumpHeight = 55f)
+    public void ConfigureForCharacterUI(
+        CharacterData character,
+        Text reactionLabel,
+        Image configuredPhraseBubble = null,
+        float uiJumpHeight = 55f)
     {
         _uiMode = true;
         phraseText = reactionLabel;
+        phraseBubbleImage = configuredPhraseBubble;
         jumpHeight = uiJumpHeight;
 
         if (character != null && character.homeTouchPhrases != null &&

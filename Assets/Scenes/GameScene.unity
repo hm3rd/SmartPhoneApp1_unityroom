@@ -167,8 +167,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   m_Navigation:
     m_Mode: 3
     m_WrapAround: 0
@@ -3458,6 +3458,9 @@ MonoBehaviour:
   knobPrefab: {fileID: 6364119793672174402, guid: 68aa60fde01354b499484c8efe1bedcb, type: 3}
   fixedScale: 1.5
   knobRange: 1.3
+  ringColor: {r: 1, g: 1, b: 1, a: 0.3}
+  knobColor: {r: 1, g: 1, b: 1, a: 0.65}
+  activeScreenWidthRatio: 0.5
   inputDir: {x: 0, y: 0}
 --- !u!4 &1071633358
 Transform:
@@ -3816,6 +3819,7 @@ GameObject:
   - component: {fileID: 1260424969}
   - component: {fileID: 1260424968}
   - component: {fileID: 1260424970}
+  - component: {fileID: 1260424971}
   m_Layer: 0
   m_Name: StageManager
   m_TagString: Untagged
@@ -3906,6 +3910,7 @@ MonoBehaviour:
   sRankHealthRatio: 0.9
   aRankHealthRatio: 0.7
   moveRightPrompt: {fileID: 153659678}
+  comboDisplay: {fileID: 1260424971}
   debugLogs: 0
   targetStageIndex: 0
   announcementController: {fileID: 0}
@@ -3952,6 +3957,29 @@ MonoBehaviour:
   characterInterval: 0.08
   displayHoldDuration: 0.55
   startScale: 2.5
+--- !u!114 &1260424971
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1260424967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f325a4c67dc402d961e8e831fb3aa6c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  comboText: {fileID: 2018339977}
+  autoDisplayPosition: {x: 0, y: 160}
+  autoDisplaySize: {x: 320, y: 100}
+  autoFontSize: 48
+  comboTimeLimit: 5
+  minimumDisplayCombo: 2
+  displayFormat: "{0}\u65AC"
+  displayDuration: 5
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  popScale: 1.3
+  popDuration: 0.5
 --- !u!1 &1303121880
 GameObject:
   m_ObjectHideFlags: 0
@@ -4518,6 +4546,7 @@ RectTransform:
   - {fileID: 1099061439}
   - {fileID: 396500439}
   - {fileID: 153659679}
+  - {fileID: 2018339976}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -5655,6 +5684,85 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1971797471}
+  m_CullTransparentMesh: 1
+--- !u!1 &2018339975
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2018339976}
+  - component: {fileID: 2018339978}
+  - component: {fileID: 2018339977}
+  m_Layer: 5
+  m_Name: ComboText
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2018339976
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2018339975}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1423057866}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -158, y: 113.68}
+  m_SizeDelta: {x: 160, y: 30}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2018339977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2018339975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 34
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 300
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
+    m_LineSpacing: 1
+  m_Text: Combo Text
+--- !u!222 &2018339978
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2018339975}
   m_CullTransparentMesh: 1
 --- !u!1 &2025877109
 GameObject:

@@ -9,14 +9,26 @@ using UnityEngine.UI;
 /// </summary>
 public sealed class CharacterSceneController : MonoBehaviour
 {
+    [Header("UI生成方法")]
+    [Tooltip("OFFの場合、Scene上に配置したUIだけを使用します。不足している参照は自動生成しません")]
+    [SerializeField] private bool buildUIAutomatically = true;
+
+    [Header("CharacterDetailPanel参照")]
     [SerializeField] private RectTransform detailPanel;
     [SerializeField] private Image characterImage;
     [SerializeField] private Text nameText;
     [SerializeField] private Text statusText;
     [SerializeField] private Text descriptionText;
+    [Tooltip("Reaction Textの親に配置した吹き出しImage")]
+    [SerializeField] private Image phraseBubble;
     [SerializeField] private Text reactionText;
+    [Tooltip("キャラクター画像をタッチするButton")]
+    [SerializeField] private Button characterTouchButton;
     [SerializeField] private Button confirmButton;
+    [SerializeField] private Button closeButton;
     [SerializeField] private GameObject characterPlaceholder;
+    [Tooltip("CharacterReactionRootに付けたCharacter_behavior。未設定なら自動検索します")]
+    [SerializeField] private Character_behavior characterReaction;
     [SerializeField] private float slideSeconds = 0.25f;
 
     [Header("Text Size")]
@@ -47,7 +59,26 @@ public sealed class CharacterSceneController : MonoBehaviour
 
     private void Awake()
     {
-        if (!HasRequiredReferences()) BuildDefaultDetailPanel();
+        // 名前がCloseButton/ConfirmButtonなら、明示参照がなくても先に補完する。
+        ResolveManualReferences();
+        if (!HasRequiredReferences())
+        {
+            if (buildUIAutomatically)
+            {
+                BuildDefaultDetailPanel();
+            }
+            else
+            {
+                Debug.LogError(
+                    "CharacterSceneController: CharacterDetailPanelの必須参照が不足しています。" +
+                    "InspectorのCharacter Detail Panel参照をすべて設定してください。",
+                    this);
+                enabled = false;
+                return;
+            }
+        }
+        ResolveManualReferences();
+        WireButtonEvents();
         ApplyConfiguredTextSizes();
         if (portraitLayout == null)
         {
@@ -56,8 +87,15 @@ public sealed class CharacterSceneController : MonoBehaviour
         }
         if (sharedTouchReaction == null)
         {
-            sharedTouchReaction = characterImage.GetComponent<Character_behavior>() ??
-                                  characterImage.gameObject.AddComponent<Character_behavior>();
+            sharedTouchReaction = characterReaction;
+        }
+        if (sharedTouchReaction == null)
+        {
+            sharedTouchReaction = characterImage.GetComponentInParent<Character_behavior>();
+        }
+        if (sharedTouchReaction == null)
+        {
+            sharedTouchReaction = characterImage.gameObject.AddComponent<Character_behavior>();
         }
         if (characterPlaceholder == null)
         {
@@ -78,8 +116,68 @@ public sealed class CharacterSceneController : MonoBehaviour
                nameText != null &&
                statusText != null &&
                descriptionText != null &&
+               phraseBubble != null &&
                reactionText != null &&
-               confirmButton != null;
+               confirmButton != null &&
+               closeButton != null;
+    }
+
+    private void ResolveManualReferences()
+    {
+        if (characterTouchButton == null && characterImage != null)
+            characterTouchButton = characterImage.GetComponent<Button>();
+
+        if (characterReaction != null)
+            sharedTouchReaction = characterReaction;
+
+        if (detailPanel == null) return;
+        foreach (Button button in detailPanel.GetComponentsInChildren<Button>(true))
+        {
+            if (closeButton == null &&
+                button.name.IndexOf("Close", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                closeButton = button;
+            if (confirmButton == null &&
+                button.name.IndexOf("Confirm", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                confirmButton = button;
+        }
+    }
+
+    private void WireButtonEvents()
+    {
+        if (characterTouchButton != null)
+        {
+            characterTouchButton.onClick.RemoveListener(ReactToCharacter);
+            characterTouchButton.onClick.AddListener(ReactToCharacter);
+        }
+        else
+        {
+            Debug.LogWarning(
+                "CharacterSceneController: Character ImageにButtonがありません。" +
+                "キャラクタータッチが反応しません。",
+                this);
+        }
+
+        if (closeButton != null)
+        {
+            closeButton.onClick.RemoveListener(ClosePanel);
+            closeButton.onClick.AddListener(ClosePanel);
+        }
+
+        if (confirmButton != null)
+        {
+            confirmButton.onClick.RemoveListener(ConfirmSelection);
+            confirmButton.onClick.AddListener(ConfirmSelection);
+        }
+
+        if (characterPlaceholder != null)
+        {
+            Button placeholderButton = characterPlaceholder.GetComponent<Button>();
+            if (placeholderButton != null)
+            {
+                placeholderButton.onClick.RemoveListener(ReactToCharacter);
+                placeholderButton.onClick.AddListener(ReactToCharacter);
+            }
+        }
     }
 
     public void ShowCharacter(CharacterData data)
@@ -97,7 +195,11 @@ public sealed class CharacterSceneController : MonoBehaviour
         reactionText.text = "キャラクターをタッチ！";
         confirmButton.gameObject.SetActive(IsFormationSelection);
         float uiJumpHeight = portraitLayout != null ? portraitLayout.uiJumpHeight : 55f;
-        sharedTouchReaction.ConfigureForCharacterUI(data, reactionText, uiJumpHeight);
+        sharedTouchReaction.ConfigureForCharacterUI(
+            data,
+            reactionText,
+            phraseBubble,
+            uiJumpHeight);
         if (portraitLayout != null)
         {
             sharedTouchReaction.ApplyTouchReactionSettings(
@@ -233,10 +335,9 @@ public sealed class CharacterSceneController : MonoBehaviour
             : new Vector2(680f, 980f);
         characterImage.color = Color.white;
         sharedTouchReaction = reactionObject.AddComponent<Character_behavior>();
-        Button touchButton = characterImage.gameObject.AddComponent<Button>();
-        touchButton.targetGraphic = characterImage;
-        touchButton.transition = Selectable.Transition.None;
-        touchButton.onClick.AddListener(ReactToCharacter);
+        characterTouchButton = characterImage.gameObject.AddComponent<Button>();
+        characterTouchButton.targetGraphic = characterImage;
+        characterTouchButton.transition = Selectable.Transition.None;
 
         characterPlaceholder = CreatePlaceholder(reactionRoot);
         Button placeholderButton = characterPlaceholder.AddComponent<Button>();
@@ -250,11 +351,23 @@ public sealed class CharacterSceneController : MonoBehaviour
         SetRect(statusText.rectTransform, new Vector2(0.56f, 0.55f), new Vector2(0.94f, 0.82f));
         descriptionText = CreateText("Description", detailPanel, descriptionFontSize, TextAnchor.UpperLeft);
         SetRect(descriptionText.rectTransform, new Vector2(0.56f, 0.24f), new Vector2(0.94f, 0.53f));
-        reactionText = CreateText("Reaction", detailPanel, reactionFontSize, TextAnchor.MiddleCenter);
-        SetRect(reactionText.rectTransform, new Vector2(0.05f, 0.04f), new Vector2(0.55f, 0.14f));
+        GameObject phraseBubbleObject = CreateUI("PhraseBubble", detailPanel);
+        phraseBubble = phraseBubbleObject.AddComponent<Image>();
+        phraseBubble.color = Color.white;
+        phraseBubble.raycastTarget = false;
+        SetRect(
+            phraseBubble.rectTransform,
+            new Vector2(0.05f, 0.04f),
+            new Vector2(0.55f, 0.14f));
+        reactionText = CreateText(
+            "ReactionText",
+            phraseBubble.transform,
+            reactionFontSize,
+            TextAnchor.MiddleCenter);
+        SetRect(reactionText.rectTransform, Vector2.zero, Vector2.one);
 
-        Button close = CreateButton("CloseButton", detailPanel, "閉じる", ClosePanel);
-        SetRect(close.GetComponent<RectTransform>(), new Vector2(0.78f, 0.04f), new Vector2(0.94f, 0.14f));
+        closeButton = CreateButton("CloseButton", detailPanel, "閉じる", ClosePanel);
+        SetRect(closeButton.GetComponent<RectTransform>(), new Vector2(0.78f, 0.04f), new Vector2(0.94f, 0.14f));
         confirmButton = CreateButton("ConfirmButton", detailPanel, "選択", ConfirmSelection);
         SetRect(confirmButton.GetComponent<RectTransform>(), new Vector2(0.58f, 0.04f), new Vector2(0.75f, 0.14f));
     }
