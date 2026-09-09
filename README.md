@@ -9,12 +9,17 @@
 
 ## 〇パッチノート
 ・2026/8/16
-v1.0.0　リリース
+v0.1.0　リリース
 
 ・2026/8/20
-v1.1.0　戦闘開始前/後の演出追加、フォントの調整、キャラクター選択の修正
+v0.2.0　戦闘開始前/後の演出追加、フォントの調整、キャラクター選択の修正
 
-
+・2026/9/5
+v0.3.0　コンボ数表示・移動UI表示・メニュー画面追加
 
 ## unityroomリンク
 [unityroom](https://unityroom.com/games/da4_gameplace "unityroom")
+
+
+## 開発中の映像
+https://github.com/user-attachments/assets/24728c32-2b16-48da-96b9-41ad472955fb
