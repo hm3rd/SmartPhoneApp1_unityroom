@@ -18,8 +18,8 @@ v0.2.0　戦闘開始前/後の演出追加、フォントの調整、キャラ�
 v0.3.0　コンボ数表示・移動UI表示・メニュー画面追加
 
 ## unityroomリンク
-↓からプレイできます！
 [unityroom](https://unityroom.com/games/da4_gameplace "unityroom")
+←からプレイできます！
 
 
 ## 開発中の映像
