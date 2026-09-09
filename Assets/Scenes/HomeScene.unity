@@ -3672,7 +3672,7 @@ MonoBehaviour:
     actionType: 2
     sceneName: 
     targetPanel: {fileID: 0}
-    targetObjectName: 
+    targetObjectName:
     closeMenuAfterAction: 1
     interactable: 1
   - label: "\u51FA\u6483"
@@ -3685,6 +3685,13 @@ MonoBehaviour:
   - label: "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC"
     actionType: 0
     sceneName: CharacterScene
+    targetPanel: {fileID: 0}
+    targetObjectName: 
+    closeMenuAfterAction: 1
+    interactable: 1
+  - label: "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC\u5E83\u5834"
+    actionType: 0
+    sceneName: CharacterPlaza
     targetPanel: {fileID: 0}
     targetObjectName: 
     closeMenuAfterAction: 1

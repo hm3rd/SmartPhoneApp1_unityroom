@@ -15,7 +15,20 @@ MonoBehaviour:
   characterId: 5
   characterName: "\u6851\u540D\u6C5F"
   description: 
-  characterSprite: {fileID: 0}
+  characterSprite: {fileID: 6779711659878273971, guid: 540e4310196067348bcf89382bf922f8, type: 3}
+  flipGameSpritesByDefault: 1
+  idleAnimation:
+    frames: []
+  moveAnimation:
+    frames: []
+  attackAnimation:
+    frames:
+    - sprite: {fileID: 6779711659878273971, guid: 540e4310196067348bcf89382bf922f8, type: 3}
+      displaySeconds: 0.01
+    - sprite: {fileID: 7204379850565372952, guid: 0c3c38d0be86c15478109882f8a8d0cf, type: 3}
+      displaySeconds: 0.7
+  damageAnimation:
+    frames: []
   canBeObtainedFromGacha: 1
   gachaWeight: 100
   homeTouchPhrases:

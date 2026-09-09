@@ -23,6 +23,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/CharacterScene.unity
     guid: 32138a1b29c55e04ab265d83b4562d8e
+  - enabled: 1
+    path: Assets/Scenes/CharacterPlaza.unity
+    guid: c2f39c9e8f6c4c59a00bb069378c9d93
   m_configObjects:
     com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: f662a040f83fa564db5361351ba74bf3, type: 2}
     com.unity.adaptiveperformance.samsung.android.provider_settings: {fileID: 11400000, guid: dcf25382baa5f6840b3b3321dd341b13, type: 2}

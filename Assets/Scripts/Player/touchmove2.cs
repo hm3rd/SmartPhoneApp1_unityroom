@@ -149,11 +149,19 @@ public class TouchMove2 : MonoBehaviour, IPlayerAttack
     private void UpdateFacing(bool facingRight)
     {
         isRight = facingRight;
+        PlayerCharacterSpriteAnimator spriteAnimator =
+            GetComponentInChildren<PlayerCharacterSpriteAnimator>(true);
+        if (spriteAnimator != null)
+        {
+            // キャラクター交代直後も含め、基準反転設定を毎回正しく反映する。
+            spriteAnimator.SetFacingRight(facingRight);
+        }
+
         if (lastFacingRight != facingRight)
         {
-            if (spriteRenderer != null)
+            if (spriteAnimator == null && spriteRenderer != null)
             {
-                // 右向きのとき flipX=false, 左でtrue （必要に応じて逆転）
+                // アニメーション未使用時は従来の右向き基準で反転する。
                 spriteRenderer.flipX = !facingRight;
             }
             lastFacingRight = facingRight;

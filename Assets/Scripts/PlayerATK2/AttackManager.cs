@@ -137,6 +137,8 @@ public class AttackManager : MonoBehaviour
             StartCooldown(attackData);
         }
 
+        PlayCharacterAttackAnimation();
+
         return true;
     }
 
@@ -277,6 +279,7 @@ public class AttackManager : MonoBehaviour
 
         SpawnAttack(attackData, damage, scale);
         StartCooldown(attackData);
+        PlayCharacterAttackAnimation();
         return true;
     }
 
@@ -444,5 +447,14 @@ public class AttackManager : MonoBehaviour
     private bool IsFacingRight()
     {
         return playerAttack == null || playerAttack.isRight;
+    }
+
+    private void PlayCharacterAttackAnimation()
+    {
+        if (playerTransform == null) return;
+        PlayerCharacterSpriteAnimator spriteAnimator =
+            playerTransform.GetComponentInChildren<PlayerCharacterSpriteAnimator>(true);
+        if (spriteAnimator != null)
+            spriteAnimator.PlayAttack();
     }
 }

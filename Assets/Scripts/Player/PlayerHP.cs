@@ -91,6 +91,11 @@ public class PlayerHP : MonoBehaviour
         // GameCharacterManager 経由でダメージを適用
         gameCharacterManager.ApplyDamageToCurrent(damage);
 
+        PlayerCharacterSpriteAnimator spriteAnimator =
+            GetComponentInChildren<PlayerCharacterSpriteAnimator>(true);
+        if (spriteAnimator != null)
+            spriteAnimator.PlayDamage();
+
         float knockbackDistance = knockbackDistanceByDamage != null
             ? Mathf.Max(0f, knockbackDistanceByDamage.Evaluate(damage))
             : 0f;

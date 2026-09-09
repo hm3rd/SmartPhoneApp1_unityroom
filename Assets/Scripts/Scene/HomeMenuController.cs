@@ -87,6 +87,7 @@ public sealed class HomeMenuController : MonoBehaviour
             new MenuEntry { label = "ホーム", actionType = MenuActionType.ReturnHome },
             new MenuEntry { label = "出撃", actionType = MenuActionType.OpenPanel, targetObjectName = "StageSelectPanel" },
             new MenuEntry { label = "キャラクター", actionType = MenuActionType.LoadScene, sceneName = "CharacterScene" },
+            new MenuEntry { label = "キャラクター広場", actionType = MenuActionType.LoadScene, sceneName = "CharacterPlaza" },
             new MenuEntry { label = "ガチャ", actionType = MenuActionType.LoadScene, sceneName = "GatyaScene" },
             new MenuEntry { label = "ショップ", actionType = MenuActionType.LoadScene, sceneName = "ShopScene" }
         };

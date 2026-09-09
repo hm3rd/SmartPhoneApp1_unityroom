@@ -24,6 +24,8 @@ public class GameCharacterManager : MonoBehaviour
     [Header("プレイヤーへの適用先")]
     [SerializeField] private AttackManager attackManager;
     [SerializeField] private SpriteRenderer playerSpriteRenderer;
+    [Tooltip("GameScene用の画像アニメーション。未設定ならPlayer画像に自動追加します")]
+    [SerializeField] private PlayerCharacterSpriteAnimator playerSpriteAnimator;
     [SerializeField] private Transform playerVisualRoot; // 任意: プレハブを差し替える置き場所
     [SerializeField] private AttackButton[] attackButtons; // 攻撃ボタンの参照（キャラ交代時に更新）
 
@@ -378,6 +380,15 @@ public class GameCharacterManager : MonoBehaviour
                 ? activeData.themeColor
                 : new Color(0.25f, 0.75f, 1f, 1f);
             ApplyNormalizedRendererScale(playerSpriteRenderer.sprite);
+
+            if (playerSpriteAnimator == null)
+            {
+                playerSpriteAnimator =
+                    playerSpriteRenderer.GetComponent<PlayerCharacterSpriteAnimator>();
+                if (playerSpriteAnimator == null)
+                    playerSpriteAnimator = playerSpriteRenderer.gameObject.AddComponent<PlayerCharacterSpriteAnimator>();
+            }
+            playerSpriteAnimator.Configure(activeData, playerSpriteRenderer);
         }
 
         // プレハブを差し替える場合（任意設定）
