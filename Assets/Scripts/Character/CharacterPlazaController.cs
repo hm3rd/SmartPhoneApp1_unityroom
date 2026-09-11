@@ -28,6 +28,8 @@ public sealed class CharacterPlazaController : MonoBehaviour
     [Min(.1f)] [SerializeField] float interactionDistance = 2f;
     [SerializeField] Button talkButton;
     [SerializeField] GameObject conversationPanel;
+    [Tooltip("会話相手のCharacterDataにあるメイン画像を表示するUI Image")]
+    [SerializeField] Image conversationCharacterImage;
     [SerializeField] Text speakerNameText;
     [SerializeField] Text conversationText;
     [SerializeField] KeyCode keyboardTalkKey = KeyCode.E;
@@ -142,7 +144,14 @@ public sealed class CharacterPlazaController : MonoBehaviour
             phrase = data.homeTouchPhrases[Random.Range(0, data.homeTouchPhrases.Length)];
         if (speakerNameText) speakerNameText.text = data.characterName;
         if (conversationText) conversationText.text = phrase;
+        if (conversationCharacterImage)
+        {
+            conversationCharacterImage.sprite = data.characterSprite;
+            conversationCharacterImage.preserveAspect = true;
+            conversationCharacterImage.enabled = data.characterSprite != null;
+        }
         if (conversationPanel) conversationPanel.SetActive(true);
+        EnsureConversationDrawOrder();
         nearestNpc.PauseForConversation();
         SetConversationMovementPaused(true);
     }
@@ -162,6 +171,7 @@ public sealed class CharacterPlazaController : MonoBehaviour
             pausedPlayerMovement.Clear();
             PauseMovement(player ? player.GetComponent<TouchMove2>() : null);
             PauseMovement(player ? player.GetComponent<WASDMoveDebug>() : null);
+            PauseMovement(player ? player.GetComponent<MoveUI>() : null);
             if (additionalPlayerMovementScripts != null)
                 foreach (Behaviour movement in additionalPlayerMovementScripts) PauseMovement(movement);
 
@@ -200,6 +210,15 @@ public sealed class CharacterPlazaController : MonoBehaviour
         if (!movement || !movement.enabled || pausedPlayerMovement.Contains(movement)) return;
         movement.enabled = false;
         pausedPlayerMovement.Add(movement);
+    }
+
+    void EnsureConversationDrawOrder()
+    {
+        // 同じCanvas内では後のSiblingほど前面に描画される。
+        if (conversationCharacterImage)
+            conversationCharacterImage.transform.SetAsFirstSibling();
+        if (speakerNameText) speakerNameText.transform.SetAsLastSibling();
+        if (conversationText) conversationText.transform.SetAsLastSibling();
     }
 
     static void Shuffle<T>(IList<T> list)

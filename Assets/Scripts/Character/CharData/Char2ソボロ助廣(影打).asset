@@ -15,12 +15,22 @@ MonoBehaviour:
   characterId: 2
   characterName: "\u30BD\u30DC\u30ED\u52A9\u5EE3(\u5F71\u6253)"
   description: 
-  characterSprite: {fileID: 0}
+  characterSprite: {fileID: -3466348014429418713, guid: 5eb8b4db9ef918e488a9b40b7446e1df, type: 3}
+  flipGameSpritesByDefault: 0
+  idleAnimation:
+    frames: []
+  moveAnimation:
+    frames: []
+  attackAnimation:
+    frames: []
+  damageAnimation:
+    frames: []
   canBeObtainedFromGacha: 1
   gachaWeight: 10
   homeTouchPhrases:
   - "\u3042\u3089\u3001\u308F\u3093\u3061\u3083\u3093\u3069\u3046\u3057\u305F\u306E\uFF1F"
-  - "\u3073\u3063\u304F\u308A\u3057\u305F\uFF01"
+  - "\u3042\u3089\u3042\u3089\uFF5E"
+  - "\u304A\u306D\u3048\u3055\u3093\u304C\u604B\u3057\u304F\u306A\u3063\u305F\uFF1F"
   maxHP: 100
   moveSpeed: 5
   availableAttacks:
