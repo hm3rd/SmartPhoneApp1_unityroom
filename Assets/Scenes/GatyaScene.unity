@@ -578,9 +578,16 @@ MonoBehaviour:
   singlePullButton: {fileID: 1080323790}
   tenPullButton: {fileID: 1550518003}
   stoneText: {fileID: 102838814}
+  probabilityText: {fileID: 0}
   resultPanel: {fileID: 0}
   resultContainer: {fileID: 0}
   messageText: {fileID: 0}
+  buttonFontSize: 32
+  stoneFontSize: 32
+  probabilityFontSize: 24
+  messageFontSize: 42
+  singleResultNameFontSize: 34
+  tenResultNameFontSize: 22
   introDuration: 0.25
   characterInterval: 0.25
   onRollStarted:
@@ -1970,7 +1977,7 @@ Canvas:
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
   m_UseReflectionProbes: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -2021,15 +2028,22 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7937e6fb140c4b34b84baaf1713b21e9, type: 2}
   - {fileID: 11400000, guid: 4c6921df3deb79d4a914d4aca98bf642, type: 2}
   - {fileID: 11400000, guid: 74b82358d0026ca42ae96cb8be4a49d6, type: 2}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 274779bd29a91dc4b833c2c94ec50e7e, type: 2}
   singleCost: 3
   tenPullCost: 30
   singlePullButton: {fileID: 1114007097}
   tenPullButton: {fileID: 814820206}
   stoneText: {fileID: 152909772}
+  probabilityText: {fileID: 0}
   resultPanel: {fileID: 0}
   resultContainer: {fileID: 0}
   messageText: {fileID: 0}
+  buttonFontSize: 32
+  stoneFontSize: 32
+  probabilityFontSize: 24
+  messageFontSize: 42
+  singleResultNameFontSize: 34
+  tenResultNameFontSize: 22
   introDuration: 0.25
   characterInterval: 0.25
   onRollStarted:

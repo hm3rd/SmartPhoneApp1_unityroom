@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -34,6 +35,8 @@ public class Gatya : MonoBehaviour
     [SerializeField] private Button singlePullButton;
     [SerializeField] private Button tenPullButton;
     [SerializeField] private Text stoneText;
+    [Tooltip("現在の排出対象と確率を表示するText。未設定なら自動生成します")]
+    [SerializeField] private Text probabilityText;
     [SerializeField] private GameObject resultPanel;
     [SerializeField] private Transform resultContainer;
     [SerializeField] private Text messageText;
@@ -41,6 +44,7 @@ public class Gatya : MonoBehaviour
     [Header("Text Size")]
     [Min(18)] [SerializeField] private int buttonFontSize = 32;
     [Min(18)] [SerializeField] private int stoneFontSize = 32;
+    [Min(14)] [SerializeField] private int probabilityFontSize = 24;
     [Min(20)] [SerializeField] private int messageFontSize = 42;
     [Min(16)] [SerializeField] private int singleResultNameFontSize = 34;
     [Min(14)] [SerializeField] private int tenResultNameFontSize = 22;
@@ -70,11 +74,14 @@ public class Gatya : MonoBehaviour
         FindExistingButtons();
         EnsureOverlayCanvas();
         EnsureStoneUI();
+        EnsureProbabilityUI();
         EnsureResultUI();
         ConfigureExistingButtonText(singlePullButton);
         ConfigureExistingButtonText(tenPullButton);
         ConfigureText(stoneText, stoneFontSize);
+        ConfigureText(probabilityText, probabilityFontSize);
         ConfigureText(messageText, messageFontSize);
+        RefreshProbabilityText();
 
         if (singlePullButton != null) singlePullButton.onClick.AddListener(PullOnce);
         if (tenPullButton != null) tenPullButton.onClick.AddListener(PullTen);
@@ -198,6 +205,32 @@ public class Gatya : MonoBehaviour
         return total;
     }
 
+    /// <summary>現在のガチャで実際に排出されるキャラクターと確率を更新する。</summary>
+    public void RefreshProbabilityText()
+    {
+        if (probabilityText == null) return;
+
+        int totalWeight = GetTotalWeight();
+        if (totalWeight <= 0)
+        {
+            probabilityText.text = "排出対象が設定されていません";
+            return;
+        }
+
+        StringBuilder builder = new StringBuilder("排出キャラクター / 提供割合\n");
+        foreach (CharacterData character in GetGachaPool())
+        {
+            if (character == null || !character.canBeObtainedFromGacha) continue;
+            int weight = Mathf.Max(1, character.gachaWeight);
+            float probability = 100f * weight / totalWeight;
+            builder.Append(character.characterName)
+                .Append("　")
+                .Append(probability.ToString("0.##"))
+                .Append("%\n");
+        }
+        probabilityText.text = builder.ToString().TrimEnd();
+    }
+
     private IEnumerable<CharacterData> GetGachaPool()
     {
         // 個別プールが設定されていれば、それだけを排出対象にする。
@@ -317,6 +350,22 @@ public class Gatya : MonoBehaviour
         stoneText = stoneObject.GetComponent<Text>();
         stoneText.alignment = TextAnchor.MiddleRight;
         stoneText.text = $"石: {PlayerStoneWallet.Amount}";
+    }
+
+    private void EnsureProbabilityUI()
+    {
+        if (probabilityText != null) return;
+
+        GameObject probabilityObject = CreateTextObject(
+            "GachaProbabilityText", overlayRoot, probabilityFontSize);
+        RectTransform rect = probabilityObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.05f, 0.48f);
+        rect.anchorMax = new Vector2(0.55f, 0.88f);
+        rect.offsetMin = rect.offsetMax = Vector2.zero;
+        probabilityText = probabilityObject.GetComponent<Text>();
+        probabilityText.alignment = TextAnchor.UpperLeft;
+        probabilityText.horizontalOverflow = HorizontalWrapMode.Wrap;
+        probabilityText.verticalOverflow = VerticalWrapMode.Overflow;
     }
 
     /// <summary>

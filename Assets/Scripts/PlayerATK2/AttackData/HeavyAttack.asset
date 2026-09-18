@@ -10,21 +10,31 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9130b2aabfb8791468648f5a90311bf9, type: 3}
-  m_Name: MultiHitAttack
-  m_EditorClassIdentifier: 
-  attackName: "\u901A\u5E38\u653B\u6483"
-  attackType: 1
-  damage: 10
-  cooldownTime: 0
+  m_Name: HeavyAttack
+  m_EditorClassIdentifier: Assembly-CSharp::AttackData
+  attackName: "\u5F37\u6483"
+  attackType: 0
+  damage: 30
+  cooldownTime: 1.5
   hitBoxPrefab: {fileID: 5509274092673679156, guid: 730b725bf9653b9438504b1468645d91, type: 3}
   duration: 0.2
   spawnDistance: 1
   spawnOffset: {x: 0, y: 0}
   followPlayerDirection: 1
-  flipOnDirection: 1
   scale: 1
   scaleAxes: {x: 1, y: 1}
   rotationZ: 0
+  flipOnDirection: 1
+  knockbackDistance: 0.7
+  knockbackDuration: 0.3
+  projectileSpeed: 8
+  projectileLifetime: 5
+  destroyProjectileOnHit: 1
+  destroyProjectileOffScreen: 1
+  offScreenMargin: 0.05
+  dashDistance: 4
+  dashDuration: 0.3
+  invincibleDuringDash: 1
   hitCount: 3
   hitInterval: 0.15
   updateDirectionEachHit: 1
