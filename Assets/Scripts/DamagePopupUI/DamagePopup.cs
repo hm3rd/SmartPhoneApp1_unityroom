@@ -22,6 +22,7 @@ public class DamagePopup : MonoBehaviour
     void Awake()
     {
         textMesh = GetComponent<TextMeshProUGUI>();
+        JapaneseFontProvider.Apply(textMesh);
         canvasGroup = GetComponent<CanvasGroup>();
         if (canvasGroup == null)
         {

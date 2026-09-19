@@ -95,6 +95,10 @@ public class SafePlayerHPBar : MonoBehaviour
         // 3体分のHP表示を更新
         for (int i = 0; i < CHARACTER_SLOT_COUNT; i++)
         {
+            bool hasCharacter = gameCharacterManager.HasCharacterInSlot(i);
+            SetSlotVisible(i, hasCharacter);
+            if (!hasCharacter) continue;
+
             int currentHp = gameCharacterManager.GetCharacterCurrentHp(i);
             int maxHp = gameCharacterManager.GetCharacterMaxHp(i);
             
@@ -115,6 +119,23 @@ public class SafePlayerHPBar : MonoBehaviour
             {
                 hpTexts[i].text = $"{currentHp}/{maxHp}";
             }
+        }
+    }
+
+    private void SetSlotVisible(int slotIndex, bool visible)
+    {
+        if (displaySliders != null &&
+            slotIndex < displaySliders.Length &&
+            displaySliders[slotIndex] != null)
+        {
+            displaySliders[slotIndex].gameObject.SetActive(visible);
+        }
+
+        if (hpTexts != null &&
+            slotIndex < hpTexts.Length &&
+            hpTexts[slotIndex] != null)
+        {
+            hpTexts[slotIndex].gameObject.SetActive(visible);
         }
     }
     

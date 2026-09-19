@@ -1,169 +1,42 @@
-# PlayerATK2 - 統一攻撃システム
+# PlayerATK2 - 攻撃設定
 
-## 概要
-シンプルで一貫性のある攻撃システム。全ての攻撃をデータドリブンで管理し、Inspector上で簡単に設定できます。
+攻撃方法はすべて `AttackData` アセットで作成します。
 
-## 主要コンポーネント
+## 新しい攻撃の作成
 
-### 1. AttackData (ScriptableObject)
-攻撃の基本データを定義します。
+1. `Assets/Scripts/PlayerATK2/AttackData` を開く
+2. Projectウィンドウを右クリック
+3. `Create > PlayerATK2 > AttackData`
+4. `Attack Type` を選ぶ
+   - `Normal`: 1回生成する通常攻撃
+   - `Multi Hit`: 一定間隔で複数回生成する攻撃
+   - `Charge`: ボタンを押している時間で威力と大きさが変わる攻撃
+5. `Hit Box Prefab` に、`HitBox` とTriggerのCollider2Dを付けたPrefabを設定
 
-**設定項目:**
-- `attackName`: 攻撃の名前
-- `damage`: 与えるダメージ量
-- `cooldownTime`: クールタイム（秒）
-- `hitBoxPrefab`: 攻撃判定のPrefab
-- `duration`: 攻撃判定の持続時間
-- `spawnDistance`: 生成位置のオフセット
-- `followPlayerDirection`: プレイヤーの向きに従うか
-- `scale`: スケール倍率
+選択したAttack Typeに必要な項目だけがInspectorへ表示されます。
 
-**作成方法:**
-1. Projectウィンドウで右クリック
-2. `Create > PlayerATK2 > AttackData`
-3. 設定を入力
+## キャラクターへの登録
 
-### 2. AttackManager
-全ての攻撃を統一的に管理するマネージャー。
+各 `CharacterData` の `Available Attacks` にAttackDataを登録します。
+リストの0番、1番、2番がそれぞれ攻撃ボタンへ割り当てられます。
 
-**使い方:**
-1. プレイヤーオブジェクトにアタッチ
-2. `availableAttacks`リストに使用する攻撃データを登録
-3. 自動でクールタイムを管理
+## 主な設定
 
-**主要メソッド:**
-- `ExecuteAttack(int attackIndex)`: 攻撃実行
-- `ExecuteAttack(AttackData attackData)`: 攻撃実行
-- `IsOnCooldown(AttackData)`: クールタイム中か確認
-- `GetCooldownProgress(AttackData)`: クールタイム進行率（0～1）
+- Damage: 基本ダメージ
+- Cooldown Time: 再使用までの秒数
+- Duration: 攻撃判定の寿命
+- Spawn Distance: 前方への距離
+- Spawn Offset: 前後・上下の微調整
+- Scale / Scale Axes: 全体およびXY別の大きさ
+- Rotation Z: 攻撃判定の角度
+- Flip On Direction: 左向き時の反転
 
-### 3. HitBox
-攻撃のヒットボックス。敵との衝突を検知してダメージを与えます。
+多段攻撃では回数、間隔、ヒットごとの向き更新を設定できます。
+チャージ攻撃では最大時間、最小・最大ダメージ、最小・最大サイズを設定できます。
 
-**使い方:**
-攻撃判定Prefabにアタッチし、Collider2Dと組み合わせる
+## 実行側
 
-### 4. AttackButton
-UIボタンから攻撃を発動するコンポーネント。
-
-**使い方:**
-1. UIボタンにアタッチ
-2. `attackData`に実行する攻撃を設定
-3. ボタンのOnClickイベントで`OnAttackButtonPressed()`を呼び出す
-
-### 5. AttackCooldownUI
-クールタイムをUI上に表示。
-
-**使い方:**
-1. UI要素にアタッチ
-2. `cooldownImage`にImage（fillAmount用）を設定
-3. `attackData`に対応する攻撃を設定
-
-## 特殊な攻撃タイプ
-
-### MultiHitAttackData
-連続攻撃用のデータ。
-
-**追加設定:**
-- `hitCount`: 攻撃回数
-- `hitInterval`: 各攻撃の間隔
-
-**使い方:**
-1. `Create > PlayerATK2 > MultiHitAttackData`で作成
-2. `MultiHitAttackExecutor`コンポーネントを使用
-
-### ChargeAttackData
-チャージ攻撃用のデータ。
-
-**追加設定:**
-- `maxChargeTime`: 最大チャージ時間
-- `minDamage` / `maxDamage`: ダメージ範囲
-- `minScale` / `maxScale`: スケール範囲
-
-**使い方:**
-1. `Create > PlayerATK2 > ChargeAttackData`で作成
-2. `ChargeAttackExecutor`コンポーネントを使用
-
-## セットアップ手順
-
-### 基本的な攻撃の設定
-
-1. **AttackDataの作成**
-   - Project > 右クリック > `Create > PlayerATK2 > AttackData`
-   - 名前を設定（例: `NormalAttack`）
-   - Inspector で設定:
-     - damage: 10
-     - cooldownTime: 1.0
-     - hitBoxPrefab: ヒットボックスPrefab
-     - duration: 0.2
-     - spawnDistance: 1.0
-
-2. **HitBoxPrefabの作成**
-   - 空のGameObjectを作成
-   - `HitBox`コンポーネントをアタッチ
-   - `CircleCollider2D`または`BoxCollider2D`をアタッチ
-   - IsTriggerをONに
-   - Prefab化
-
-3. **AttackManagerの設定**
-   - プレイヤーに`AttackManager`をアタッチ
-   - `availableAttacks`に作成した攻撃データを追加
-
-4. **攻撃ボタンの設定**
-   - UIボタンに`AttackButton`をアタッチ
-   - `attackData`に攻撃データを設定
-   - Button > OnClickで`AttackButton.OnAttackButtonPressed()`を設定
-
-### チャージ攻撃の設定
-
-1. **ChargeAttackDataの作成**
-   - `Create > PlayerATK2 > ChargeAttackData`
-   - チャージ設定を入力
-
-2. **UIボタンにChargeAttackExecutorをアタッチ**
-   - `chargeData`を設定
-   - EventTriggerは不要（自動で動作）
-
-### 多段攻撃の設定
-
-1. **MultiHitAttackDataの作成**
-   - `Create > PlayerATK2 > MultiHitAttackData`
-   - hitCountとhitIntervalを設定
-
-2. **MultiHitAttackExecutorを使用**
-   - 任意のオブジェクトにアタッチ
-   - UIボタンから`ExecuteMultiHit()`を呼び出す
-
-## プレイヤーの向き対応
-
-システムは`IPlayerDirection`または`IPlayerAttack`インターフェースから自動的にプレイヤーの向きを取得します。
-
-**対応方法:**
-- 既存の`TouchMove2`などが`IPlayerAttack.isRight`を持っていれば自動で連携
-
-## 利点
-
-✅ **データドリブン**: ScriptableObjectで攻撃を定義
-✅ **一貫性**: 全ての攻撃が同じ方法で動作
-✅ **簡単設定**: Inspector上で全て設定可能
-✅ **拡張性**: 新しい攻撃タイプを簡単に追加
-✅ **再利用性**: 攻撃データを複数のボタンで共有可能
-✅ **クールタイム自動管理**: AttackManagerが全て管理
-
-## 例: 3種類の攻撃ボタン
-
-```
-プレイヤー
- ├─ AttackManager (availableAttacks: Attack1, Attack2, Attack3)
- └─ TouchMove2 (IPlayerAttack)
-
-Canvas
- ├─ Button1
- │   └─ AttackButton (attackData: Attack1)
- ├─ Button2
- │   └─ AttackButton (attackData: Attack2)
- └─ Button3
-     └─ ChargeAttackExecutor (chargeData: ChargeAttack1)
-```
-
-これで簡潔で管理しやすい攻撃システムが完成します！
+- `AttackManager`: 生成とクールタイムを一元管理
+- `AttackButton`: 通常タップ・チャージ入力をAttackManagerへ渡す
+- `AttackCooldownUI`: クールタイム表示
+- `HitBox`: 敵へダメージを与える攻撃判定

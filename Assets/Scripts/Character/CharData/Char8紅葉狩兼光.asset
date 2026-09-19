@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d0c161ea237b904ebe52fef2169dd77, type: 3}
+  m_Name: "Char8\u7D05\u8449\u72E9\u517C\u5149"
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterData
+  characterId: 8
+  characterName: "\u7D05\u8449\u72E9\u517C\u5149"
+  description: "\u4F5C:\u3055\u306B\u30FC\u3055\u3093"
+  characterSprite: {fileID: -1263372817174757240, guid: 06b7e0e406bea4246863e88576a9db85, type: 3}
+  flipGameSpritesByDefault: 0
+  idleAnimation:
+    frames: []
+  moveAnimation:
+    frames: []
+  attackAnimation:
+    frames: []
+  damageAnimation:
+    frames: []
+  canBeObtainedFromGacha: 1
+  gachaWeight: 5
+  homeTouchPhrases:
+  - "\u304A\u306A\u304B\u7A7A\u3044\u305F\u3041\uFF01\u968A\u9577\u3001\u3054\u306F\u30FC\u3093\uFF01"
+  - "\u4ECA\u5BB5\u306E\u50D5\u306F\u8840\u306B\u98E2\u3048\u3066\u308B\u305C\uFF01"
+  maxHP: 120
+  moveSpeed: 5
+  availableAttacks:
+  - {fileID: 11400000, guid: c33193839dd46da4e971da36089a4ef7, type: 2}
+  characterPrefab: {fileID: 0}
+  themeColor: {r: 1, g: 1, b: 1, a: 1}

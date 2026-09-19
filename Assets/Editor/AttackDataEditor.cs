@@ -1,0 +1,129 @@
+using UnityEditor;
+using UnityEngine;
+
+[CustomEditor(typeof(AttackData))]
+public class AttackDataEditor : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        serializedObject.Update();
+
+        DrawSection("基本情報", "attackName", "attackType");
+
+        AttackData.AttackType type =
+            (AttackData.AttackType)serializedObject.FindProperty("attackType").enumValueIndex;
+
+        if (type == AttackData.AttackType.Charge)
+        {
+            DrawSection("クールタイム", "cooldownTime");
+        }
+        else
+        {
+            DrawSection("ダメージ・クールタイム", "damage", "cooldownTime");
+        }
+
+        if (type == AttackData.AttackType.Projectile ||
+            type == AttackData.AttackType.Dash)
+        {
+            DrawSection("攻撃判定", "hitBoxPrefab");
+        }
+        else
+        {
+            DrawSection("攻撃判定", "hitBoxPrefab", "duration");
+        }
+        DrawSection(
+            "生成位置",
+            "spawnDistance",
+            "spawnOffset",
+            "followPlayerDirection");
+        DrawSection(
+            "見た目",
+            "scale",
+            "scaleAxes",
+            "rotationZ",
+            "flipOnDirection");
+        DrawSection(
+            "ノックバック",
+            "knockbackDistance",
+            "knockbackDuration");
+
+        if (type == AttackData.AttackType.MultiHit)
+        {
+            DrawSection(
+                "多段攻撃",
+                "hitCount",
+                "hitInterval",
+                "updateDirectionEachHit");
+        }
+        else if (type == AttackData.AttackType.Charge)
+        {
+            DrawSection(
+                "チャージ攻撃",
+                "maxChargeTime",
+                "minDamage",
+                "maxDamage",
+                "minScale",
+                "maxScale");
+        }
+        else if (type == AttackData.AttackType.Projectile)
+        {
+            DrawSection(
+                "飛び道具",
+                "projectileSpeed",
+                "projectileLifetime",
+                "destroyProjectileOnHit",
+                "destroyProjectileOffScreen",
+                "offScreenMargin");
+            EditorGUILayout.HelpBox(
+                "Projectile Lifetimeは画面外削除ができない場合の安全用最大寿命です。",
+                MessageType.Info);
+        }
+        else if (type == AttackData.AttackType.Dash)
+        {
+            DrawSection(
+                "突進攻撃",
+                "dashDistance",
+                "dashDuration",
+                "invincibleDuringDash");
+            EditorGUILayout.HelpBox(
+                "Hit Box Prefabは突進中プレイヤーへ追従し、通過した敵へ1回ずつダメージを与えます。",
+                MessageType.Info);
+        }
+
+        serializedObject.ApplyModifiedProperties();
+        DrawValidationHelp();
+    }
+
+    private void DrawSection(string title, params string[] propertyNames)
+    {
+        EditorGUILayout.Space(6f);
+        EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
+        foreach (string propertyName in propertyNames)
+        {
+            SerializedProperty property = serializedObject.FindProperty(propertyName);
+            if (property != null)
+            {
+                EditorGUILayout.PropertyField(property);
+            }
+        }
+    }
+
+    private void DrawValidationHelp()
+    {
+        AttackData data = (AttackData)target;
+        if (data.hitBoxPrefab == null)
+        {
+            EditorGUILayout.HelpBox(
+                "Hit Box Prefabを設定してください。",
+                MessageType.Warning);
+            return;
+        }
+
+        if (data.hitBoxPrefab.GetComponent<HitBox>() == null)
+        {
+            EditorGUILayout.HelpBox(
+                "指定したPrefabにHitBoxコンポーネントがありません。",
+                MessageType.Error);
+        }
+    }
+}

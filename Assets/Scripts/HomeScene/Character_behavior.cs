@@ -3,6 +3,24 @@ using UnityEngine.UI; // Text 用（TextMeshProを使う場合は適宜差し替
 
 public class Character_behavior : MonoBehaviour
 {
+    private const string HomeCharacterIdKey = "SelectedCharacterId_0";
+
+    [Header("ホーム表示キャラクター")]
+    [Tooltip("ホーム画面に表示するSpriteRenderer。未設定なら自動作成します")]
+    [SerializeField] private SpriteRenderer homeCharacterRenderer;
+
+    [Tooltip("SpriteRendererを自動作成した場合の描画順")]
+    [SerializeField] private int autoCreatedSortingOrder = 10;
+
+    [Header("ホーム画像の自動サイズ調整")]
+    [Range(0.05f, 1f)]
+    [Tooltip("キャラクター画像が使用できる画面幅の割合")]
+    [SerializeField] private float homeMaxViewportWidth = 0.65f;
+
+    [Range(0.05f, 1f)]
+    [Tooltip("キャラクター画像が使用できる画面高さの割合")]
+    [SerializeField] private float homeMaxViewportHeight = 0.78f;
+
     [Header("おさわり反応設定")]
     [Tooltip("タッチ時にランダム表示する台詞候補")]
     public string[] touchPhrases =
@@ -16,6 +34,20 @@ public class Character_behavior : MonoBehaviour
 
     [Tooltip("台詞を表示する Text (任意)")]
     public Text phraseText; // 未設定なら Debug.Log で出力
+
+    [Header("セリフ表示位置")]
+    [Tooltip("テキストの土台に使用する吹き出し画像")]
+    [SerializeField] private Sprite phraseBubbleSprite;
+
+    [Tooltip("吹き出し内のテキスト位置。Yをマイナスにすると下へ移動します")]
+    [SerializeField] private Vector2 phraseTextPositionOffset = new Vector2(0f, -15f);
+
+    private static readonly Vector2 PhraseBubblePadding = new Vector2(50f, 30f);
+    private const float PhraseBubbleMinWidth = 180f;
+    private const float PhraseBubbleMaxWidth = 520f;
+    private const float PhraseBubbleMinHeight = 80f;
+    private Image phraseBubbleImage;
+    private int displayedCharacterId = -1;
 
     [Header("アニメーション設定")]
     [Tooltip("アニメーションの継続秒数")]
@@ -53,6 +85,8 @@ public class Character_behavior : MonoBehaviour
     private bool _isReacting = false;
     private float _lastTouchTime = -10f;
     private int _lastPhraseIndex = -1;
+    private bool _uiMode;
+    private Vector3 _homeBaseScale;
 
     private enum AnimationType
     {
@@ -63,6 +97,15 @@ public class Character_behavior : MonoBehaviour
 
     void Awake()
     {
+        _uiMode = transform is RectTransform && GetComponentInParent<Canvas>() != null;
+        if (!_uiMode)
+        {
+            _homeBaseScale = transform.localScale;
+            EnsureHomeCharacterRenderer();
+            ApplySelectedHomeCharacter();
+            EnsurePhraseBubble();
+        }
+
         _originalPos = transform.localPosition;
         _originalScale = transform.localScale;
         _originalRotation = transform.localRotation;
@@ -77,8 +120,233 @@ public class Character_behavior : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// StagePreparePanelの一番左（スロット0）で選択したキャラクターをホームへ反映。
+    /// </summary>
+    private void ApplySelectedHomeCharacter()
+    {
+        EnsureHomeCharacterRenderer();
+        if (!PlayerPrefs.HasKey(HomeCharacterIdKey))
+        {
+            homeCharacterRenderer.sprite = null;
+            displayedCharacterId = -1;
+            return;
+        }
+
+        int characterId = PlayerPrefs.GetInt(HomeCharacterIdKey, -1);
+        displayedCharacterId = characterId;
+        CharacterDatabase database = CharacterDatabase.GetOrCreate();
+        CharacterData selectedCharacter = database.GetCharacterById(characterId);
+        if (selectedCharacter == null || selectedCharacter.characterSprite == null)
+        {
+            homeCharacterRenderer.sprite = null;
+            Debug.LogWarning($"ホーム表示用キャラクターID {characterId} が見つかりません。", this);
+            return;
+        }
+
+        homeCharacterRenderer.sprite = selectedCharacter.characterSprite;
+        homeCharacterRenderer.color = Color.white;
+        homeCharacterRenderer.enabled = true;
+        FitHomeCharacterToScreen();
+        gameObject.name = selectedCharacter.characterName;
+
+        if (selectedCharacter.homeTouchPhrases != null &&
+            selectedCharacter.homeTouchPhrases.Length > 0)
+        {
+            touchPhrases = selectedCharacter.homeTouchPhrases;
+        }
+    }
+
+    private void EnsureHomeCharacterRenderer()
+    {
+        if (homeCharacterRenderer != null) return;
+
+        homeCharacterRenderer = GetComponent<SpriteRenderer>();
+        if (homeCharacterRenderer == null)
+        {
+            homeCharacterRenderer = gameObject.AddComponent<SpriteRenderer>();
+            homeCharacterRenderer.sortingOrder = autoCreatedSortingOrder;
+        }
+    }
+
+    private void FitHomeCharacterToScreen()
+    {
+        if (_uiMode || homeCharacterRenderer == null || homeCharacterRenderer.sprite == null)
+            return;
+
+        Camera targetCamera = Camera.main;
+        if (targetCamera == null) return;
+
+        Vector2 spriteSize = homeCharacterRenderer.sprite.bounds.size;
+        if (spriteSize.x <= 0f || spriteSize.y <= 0f) return;
+
+        float availableHeight;
+        float availableWidth;
+        if (targetCamera.orthographic)
+        {
+            float cameraHeight = targetCamera.orthographicSize * 2f;
+            availableHeight = cameraHeight * homeMaxViewportHeight;
+            availableWidth = cameraHeight * targetCamera.aspect * homeMaxViewportWidth;
+        }
+        else
+        {
+            float distance = Mathf.Abs(
+                Vector3.Dot(transform.position - targetCamera.transform.position,
+                    targetCamera.transform.forward));
+            float cameraHeight = 2f * distance *
+                Mathf.Tan(targetCamera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+            availableHeight = cameraHeight * homeMaxViewportHeight;
+            availableWidth = cameraHeight * targetCamera.aspect * homeMaxViewportWidth;
+        }
+
+        Vector3 parentScale = transform.parent != null
+            ? transform.parent.lossyScale
+            : Vector3.one;
+        float worldWidthAtBase = spriteSize.x * Mathf.Abs(_homeBaseScale.x * parentScale.x);
+        float worldHeightAtBase = spriteSize.y * Mathf.Abs(_homeBaseScale.y * parentScale.y);
+        if (worldWidthAtBase <= 0f || worldHeightAtBase <= 0f) return;
+
+        float fitMultiplier = Mathf.Min(
+            availableWidth / worldWidthAtBase,
+            availableHeight / worldHeightAtBase);
+        transform.localScale = _homeBaseScale * Mathf.Max(0.0001f, fitMultiplier);
+    }
+
+    private void OnValidate()
+    {
+        homeMaxViewportWidth = Mathf.Clamp(homeMaxViewportWidth, 0.05f, 1f);
+        homeMaxViewportHeight = Mathf.Clamp(homeMaxViewportHeight, 0.05f, 1f);
+        if (!Application.isPlaying || _uiMode) return;
+
+        // 実行中に画面占有率を変更した場合も即時反映する。
+        if (homeCharacterRenderer != null && homeCharacterRenderer.sprite != null)
+        {
+            FitHomeCharacterToScreen();
+            _originalScale = transform.localScale;
+            if (!_isReacting) transform.localScale = _originalScale;
+        }
+    }
+
+    private void RefreshSelectedHomeCharacterIfChanged()
+    {
+        int selectedId = PlayerPrefs.GetInt(HomeCharacterIdKey, -1);
+        if (selectedId != displayedCharacterId)
+        {
+            ApplySelectedHomeCharacter();
+        }
+    }
+
+    /// <summary>
+    /// PhraseTextの背面に吹き出しImageを作り、Textをその子として前面表示する。
+    /// </summary>
+    private void EnsurePhraseBubble()
+    {
+        if (phraseText == null) return;
+
+        RectTransform textRect = phraseText.rectTransform;
+        if (phraseBubbleImage == null)
+        {
+            Transform originalParent = textRect.parent;
+            int originalSiblingIndex = textRect.GetSiblingIndex();
+
+            GameObject bubbleObject = new GameObject(
+                "PhraseBubble",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image));
+            bubbleObject.layer = phraseText.gameObject.layer;
+            bubbleObject.transform.SetParent(originalParent, false);
+            bubbleObject.transform.SetSiblingIndex(originalSiblingIndex);
+
+            RectTransform bubbleRect = bubbleObject.GetComponent<RectTransform>();
+            bubbleRect.anchorMin = textRect.anchorMin;
+            bubbleRect.anchorMax = textRect.anchorMax;
+            bubbleRect.pivot = textRect.pivot;
+            bubbleRect.anchoredPosition = textRect.anchoredPosition;
+            bubbleRect.sizeDelta = textRect.sizeDelta + PhraseBubblePadding;
+
+            phraseBubbleImage = bubbleObject.GetComponent<Image>();
+
+            textRect.SetParent(bubbleRect, false);
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.pivot = new Vector2(0.5f, 0.5f);
+            textRect.anchoredPosition = Vector2.zero;
+            textRect.sizeDelta = -PhraseBubblePadding;
+        }
+
+        // Inspectorで設定したCharacterScene側の画像を、未設定Spriteで消さない。
+        if (phraseBubbleSprite != null)
+        {
+            phraseBubbleImage.sprite = phraseBubbleSprite;
+        }
+        phraseBubbleImage.color = Color.white;
+        phraseBubbleImage.type = phraseBubbleImage.sprite != null
+            ? Image.Type.Sliced
+            : Image.Type.Simple;
+        phraseBubbleImage.raycastTarget = false;
+
+        phraseText.color = Color.black;
+        phraseText.raycastTarget = false;
+        phraseText.horizontalOverflow = HorizontalWrapMode.Wrap;
+        phraseText.verticalOverflow = VerticalWrapMode.Overflow;
+        phraseText.transform.SetAsLastSibling();
+        phraseBubbleImage.gameObject.SetActive(!string.IsNullOrEmpty(phraseText.text));
+
+        if (!string.IsNullOrEmpty(phraseText.text))
+        {
+            ResizePhraseBubble();
+        }
+    }
+
+    /// <summary>
+    /// セリフの推奨サイズを測り、吹き出しを文字量に合わせて伸縮する。
+    /// 最大幅を超えた文章は折り返し、高さを広げる。
+    /// </summary>
+    private void ResizePhraseBubble()
+    {
+        if (phraseText == null || phraseBubbleImage == null) return;
+
+        RectTransform bubbleRect = phraseBubbleImage.rectTransform;
+        RectTransform textRect = phraseText.rectTransform;
+
+        phraseBubbleImage.gameObject.SetActive(true);
+
+        float contentMaxWidth = Mathf.Max(
+            PhraseBubbleMinWidth,
+            PhraseBubbleMaxWidth - PhraseBubblePadding.x);
+        float preferredWidth = phraseText.preferredWidth;
+        float bubbleWidth = Mathf.Clamp(
+            preferredWidth + PhraseBubblePadding.x,
+            PhraseBubbleMinWidth,
+            PhraseBubbleMaxWidth);
+
+        // 幅を先に確定させてから、折り返し後の必要な高さを取得する
+        bubbleRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, bubbleWidth);
+        textRect.SetSizeWithCurrentAnchors(
+            RectTransform.Axis.Horizontal,
+            Mathf.Min(preferredWidth, contentMaxWidth));
+        Canvas.ForceUpdateCanvases();
+
+        float bubbleHeight = Mathf.Max(
+            PhraseBubbleMinHeight,
+            phraseText.preferredHeight + PhraseBubblePadding.y);
+        bubbleRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, bubbleHeight);
+
+        // Textは吹き出しの内側いっぱいに配置する
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.anchoredPosition = phraseTextPositionOffset;
+        textRect.sizeDelta = -PhraseBubblePadding;
+    }
+
     void Update()
     {
+        // CharacterScene の UI では Button.onClick から同じ反応処理を呼ぶ。
+        if (_uiMode) return;
+
+        RefreshSelectedHomeCharacterIfChanged();
+
         // スマホタッチ
         if (Input.touchCount > 0)
         {
@@ -126,7 +394,7 @@ public class Character_behavior : MonoBehaviour
         ReactToTouch();
     }
 
-    private void ReactToTouch()
+    public void ReactToTouch()
     {
         if (!_isReacting)
         {
@@ -136,6 +404,54 @@ public class Character_behavior : MonoBehaviour
         }
         ShowRandomPhrase();
         PlayRandomVoice();
+    }
+
+    /// <summary>
+    /// CharacterScene の UI ImageでもHomeSceneと同じ反応処理を利用するための設定。
+    /// UIではワールド座標の当たり判定を止め、ButtonからReactToTouchを呼び出す。
+    /// </summary>
+    public void ConfigureForCharacterUI(
+        CharacterData character,
+        Text reactionLabel,
+        Image configuredPhraseBubble = null,
+        float uiJumpHeight = 55f)
+    {
+        _uiMode = true;
+        phraseText = reactionLabel;
+        phraseBubbleImage = configuredPhraseBubble;
+        jumpHeight = uiJumpHeight;
+
+        if (character != null && character.homeTouchPhrases != null &&
+            character.homeTouchPhrases.Length > 0)
+        {
+            touchPhrases = character.homeTouchPhrases;
+        }
+
+        _originalPos = transform.localPosition;
+        _originalScale = transform.localScale;
+        _originalRotation = transform.localRotation;
+        EnsurePhraseBubble();
+    }
+
+    /// <summary>CharacterScene用に共通タッチ演出の各値を上書きする。</summary>
+    public void ApplyTouchReactionSettings(
+        float duration,
+        float configuredJumpHeight,
+        int configuredJumpRepeatCount,
+        float configuredSwingAngle,
+        int configuredSwingCount,
+        float configuredZoomScale,
+        int configuredZoomRepeatCount,
+        float configuredTouchCooldown)
+    {
+        animationDuration = Mathf.Max(0.01f, duration);
+        jumpHeight = Mathf.Max(0f, configuredJumpHeight);
+        jumpRepeatCount = Mathf.Max(1, configuredJumpRepeatCount);
+        swingAngle = configuredSwingAngle;
+        swingCount = Mathf.Max(1, configuredSwingCount);
+        zoomScale = Mathf.Max(0.01f, configuredZoomScale);
+        zoomRepeatCount = Mathf.Max(1, configuredZoomRepeatCount);
+        touchCooldown = Mathf.Max(0f, configuredTouchCooldown);
     }
 
     private System.Collections.IEnumerator PlayAnimation(AnimationType animType)
@@ -242,6 +558,10 @@ public class Character_behavior : MonoBehaviour
         if (phraseText != null)
         {
             phraseText.text = phrase;
+            if (phraseBubbleImage != null)
+            {
+                ResizePhraseBubble();
+            }
         }
         else
         {

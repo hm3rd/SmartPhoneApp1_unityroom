@@ -7,6 +7,7 @@ using TMPro;
 /// </summary>
 public class CharacterListItem : MonoBehaviour
 {
+    private System.Action<CharacterData> selectionHandler;
     [Header("UI要素")]
     [Tooltip("キャラクター画像")]
     public Image characterImage;
@@ -65,7 +66,7 @@ public class CharacterListItem : MonoBehaviour
         // HP設定
         if (hpText != null)
         {
-            hpText.text = $"HP: {characterData.maxHP}";
+            hpText.text = $"体力: {characterData.maxHP}";
         }
         
         // 説明設定
@@ -76,6 +77,11 @@ public class CharacterListItem : MonoBehaviour
         
         Debug.Log($"キャラクター '{characterData.characterName}' のアイテムをセットアップしました");
     }
+
+    public void SetSelectionHandler(System.Action<CharacterData> handler)
+    {
+        selectionHandler = handler;
+    }
     
     /// <summary>
     /// 選択ボタンが押された時の処理
@@ -83,6 +89,12 @@ public class CharacterListItem : MonoBehaviour
     void OnSelectButtonClicked()
     {
         if (characterData == null) return;
+
+        if (selectionHandler != null)
+        {
+            selectionHandler(characterData);
+            return;
+        }
         
         Debug.Log($"キャラクター '{characterData.characterName}' が選択されました");
         
@@ -92,7 +104,9 @@ public class CharacterListItem : MonoBehaviour
         PlayerPrefs.Save();
         
         // 戻り先シーンを決定
-        string targetScene = PlayerPrefs.GetString("ReturnSceneName", returnSceneName);
+        string targetScene = HomeScenePanelState.HasSavedState
+            ? HomeScenePanelState.ReturnSceneName
+            : PlayerPrefs.GetString("ReturnSceneName", returnSceneName);
         if (string.IsNullOrEmpty(targetScene))
         {
             targetScene = returnSceneName;

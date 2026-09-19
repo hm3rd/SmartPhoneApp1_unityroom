@@ -1,10 +1,31 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+
+[System.Serializable]
+public class EnemySpawnSetting
+{
+    [Tooltip("Inspector上で判別するための名前")]
+    public string enemyName;
+
+    public GameObject enemyPrefab;
+
+    [Min(0)]
+    [Tooltip("このサブステージで出現させる数")]
+    public int spawnCount = 1;
+}
 
 [System.Serializable]
 public class SubStageInfo
 {
     public string subStageName;
     public GameObject panel;
+
+    [Header("出現する敵（新設定）")]
+    [Tooltip("敵Prefabと出現数を種類ごとに登録します")]
+    public EnemySpawnSetting[] enemySpawnSettings;
+
+    [Header("旧設定（Enemy Spawn Settingsが空の場合のみ使用）")]
     public GameObject enemyPrefab;
     public int targetDefeatCount = 3;
     public float spawnIntervalMin = 1.0f;
@@ -15,16 +36,50 @@ public class SubStageInfo
 public class StageInfo
 {
     public string stageName;
+
+    [Min(0)]
+    [Tooltip("このステージをクリアした際に獲得する石の数")]
+    public int clearStoneReward = 10;
+
     public SubStageInfo[] subStages;
 }
 
 public class NewStageManager : MonoBehaviour
 {
+    [Header("ステージ設定")]
     public StageInfo[] allStages;
+
+    [Header("プレイヤー・画面範囲")]
     public GameObject player;
     public float rightEdgeX = 8.0f;
     public float leftEdgeX = -8.0f;
+
+    [Tooltip("未設定の場合はMain Cameraを使用します")]
+    [SerializeField] private Camera stageCamera;
+
+    [Tooltip("画面端とプレイヤーColliderの間に追加する余白")]
+    [Min(0f)]
+    [SerializeField] private float screenEdgePadding = 0.05f;
+
+    [Header("クリア表示")]
     public GameObject resultPanel;
+
+    [Header("クリア評価（3体の残りHP合計割合）")]
+    [Range(0f, 1f)]
+    [Tooltip("S評価に必要な残りHP割合。0.8なら80%以上")]
+    [SerializeField] private float sRankHealthRatio = 0.8f;
+
+    [Range(0f, 1f)]
+    [Tooltip("A評価に必要な残りHP割合。これ未満はB評価")]
+    [SerializeField] private float aRankHealthRatio = 0.5f;
+
+    [Tooltip("サブステージクリア後に表示する「右へ移動」案内画像")]
+    [SerializeField] private GameObject moveRightPrompt;
+
+    [Header("コンボ表示")]
+    [Tooltip("敵の連続撃破表示。未設定ならシーンから自動検索します")]
+    [SerializeField] private EnemyComboDisplay comboDisplay;
+
     public bool debugLogs = false;
 
     // ✅ 他スクリプトからセットされる整数ステージ番号
@@ -35,10 +90,33 @@ public class NewStageManager : MonoBehaviour
     private bool isStageMoving = false;
     private int spawnedEnemyCount = 0;
     private int defeatedEnemyCount = 0;
+    private int totalDefeatedEnemyCount = 0;
+    private long totalDamageDealt = 0;
     private float timer = 0f;
     private float nextSpawnTime = 1f;
     private bool isSubStageCleared = false;
     private bool isStageCleared = false;
+    private bool clearRewardGranted = false;
+    private readonly List<GameObject> currentSpawnQueue =
+        new List<GameObject>();
+    private Rigidbody2D playerBody;
+    private Collider2D playerSolidCollider;
+    private SpriteRenderer playerSpriteRenderer;
+    private GameResultPanelController resultController;
+    private float stageStartTime;
+    [Header("開始・クリア演出")]
+    [SerializeField] private StageAnnouncementController announcementController;
+
+    [Header("最終撃破スロー演出")]
+    [Range(0.05f, 1f)] [SerializeField] private float finishingSlowScale = 0.2f;
+    [Min(0.1f)] [SerializeField] private float finishingSlowDuration = 1.2f;
+    [Min(0.01f)] [SerializeField] private float finishingZoomInDuration = 0.25f;
+    [Min(0.01f)] [SerializeField] private float finishingZoomOutDuration = 0.2f;
+    [Range(0.3f, 1f)] [SerializeField] private float finishingZoomMultiplier = 0.72f;
+    [Range(0f, 1f)] [SerializeField] private float finishingCameraFocus = 0.45f;
+    private bool stageReady;
+    private bool clearSequenceStarted;
+    private float completedClearTime;
 
     void Start()
     {
@@ -52,16 +130,47 @@ public class NewStageManager : MonoBehaviour
     }
 
     targetStage = allStages[targetStageIndex];
+    if (comboDisplay == null)
+        comboDisplay = FindFirstObjectByType<EnemyComboDisplay>();
+    if (comboDisplay == null)
+        comboDisplay = gameObject.AddComponent<EnemyComboDisplay>();
+    if (stageCamera == null)
+        stageCamera = Camera.main;
+    if (player != null)
+    {
+        playerBody = player.GetComponent<Rigidbody2D>();
+        playerSolidCollider = FindSolidPlayerCollider(player);
+        playerSpriteRenderer = player.GetComponent<SpriteRenderer>();
+    }
+
     currentSubStage = 0;
     SetSubStage(currentSubStage);
 
     if (resultPanel != null)
+    {
+        resultController = resultPanel.GetComponent<GameResultPanelController>() ??
+                           resultPanel.AddComponent<GameResultPanelController>();
         resultPanel.SetActive(false);
+    }
+    SetMoveRightPrompt(false);
+    announcementController = announcementController != null
+        ? announcementController
+        : GetComponent<StageAnnouncementController>();
+    if (announcementController == null)
+        announcementController = gameObject.AddComponent<StageAnnouncementController>();
+
+    announcementController.PlayStart(() =>
+    {
+        stageStartTime = Time.time;
+        stageReady = true;
+    });
     }
 
 
     void Update()
     {
+        if (!stageReady || clearSequenceStarted) return;
+
         if (isStageCleared)
         {
             if (resultPanel != null && !resultPanel.activeSelf)
@@ -85,7 +194,7 @@ public class NewStageManager : MonoBehaviour
             }
             else
             {
-                isStageCleared = true;
+                CompleteStage();
                 if (debugLogs)
                 {
                     Debug.Log("[Stage] All sub-stages cleared. Stage complete.");
@@ -105,7 +214,7 @@ public class NewStageManager : MonoBehaviour
         if (!isSubStageCleared && currentSubStage < targetStage.subStages.Length)
         {
             var info = targetStage.subStages[currentSubStage];
-            if (spawnedEnemyCount < info.targetDefeatCount)
+            if (spawnedEnemyCount < currentSpawnQueue.Count)
             {
                 timer += Time.deltaTime;
                 if (timer >= nextSpawnTime)
@@ -125,11 +234,29 @@ public class NewStageManager : MonoBehaviour
 
     void SpawnEnemy(SubStageInfo info)
     {
-        GameObject enemyObj = Instantiate(info.enemyPrefab, GetRandomSpawnPosition(), Quaternion.identity);
+        if (spawnedEnemyCount < 0 ||
+            spawnedEnemyCount >= currentSpawnQueue.Count)
+        {
+            return;
+        }
+
+        GameObject prefab = currentSpawnQueue[spawnedEnemyCount];
+        if (prefab == null)
+        {
+            Debug.LogWarning(
+                $"{info.subStageName}: 敵Prefabが未設定の出現枠をスキップしました。");
+            spawnedEnemyCount++;
+            return;
+        }
+
+        GameObject enemyObj = Instantiate(
+            prefab,
+            GetRandomSpawnPosition(),
+            Quaternion.identity);
         EnemyHP enemy = enemyObj.GetComponent<EnemyHP>();
         if (enemy != null)
         {
-            enemy.manager = this;
+            enemy.Initialize(this);
             if (debugLogs)
             {
                 Debug.Log("[Stage] Enemy spawned and manager set.");
@@ -145,24 +272,23 @@ public class NewStageManager : MonoBehaviour
 
     public void OnEnemyDestroyed()
     {
-        var info = targetStage.subStages[currentSubStage];
         defeatedEnemyCount++;
+        totalDefeatedEnemyCount++;
+        if (comboDisplay != null)
+            comboDisplay.RegisterKill();
         if (debugLogs)
         {
-            Debug.Log($"[Stage] Enemy destroyed. defeated:{defeatedEnemyCount}/{info.targetDefeatCount}");
+            Debug.Log(
+                $"[Stage] Enemy destroyed. defeated:{defeatedEnemyCount}/{currentSpawnQueue.Count}");
         }
-        if (defeatedEnemyCount >= info.targetDefeatCount)
+        if (defeatedEnemyCount >= currentSpawnQueue.Count)
         {
             isSubStageCleared = true;
             // 最終サブステージをクリアしたら即ResultPanel表示
             bool isLastSubStage = (currentSubStage >= targetStage.subStages.Length - 1);
             if (isLastSubStage)
             {
-                isStageCleared = true;
-                if (resultPanel != null)
-                {
-                    resultPanel.SetActive(true);
-                }
+                CompleteStage();
                 if (debugLogs)
                 {
                     Debug.Log("[Stage] Final sub-stage cleared. Result panel shown.");
@@ -170,12 +296,208 @@ public class NewStageManager : MonoBehaviour
             }
             else
             {
+                SetMoveRightPrompt(true);
                 if (debugLogs)
                 {
                     Debug.Log("[Stage] Sub-stage cleared. Move to edge to proceed.");
                 }
             }
         }
+    }
+
+    public void OnDamageDealt(int damage)
+    {
+        if (!isStageCleared && damage > 0)
+        {
+            totalDamageDealt += damage;
+        }
+    }
+
+    private void LateUpdate()
+    {
+        KeepPlayerInsideScreen();
+    }
+
+    private void CompleteStage()
+    {
+        if (isStageCleared || clearSequenceStarted) return;
+        clearSequenceStarted = true;
+        stageReady = false;
+        completedClearTime = Mathf.Max(0f, Time.time - stageStartTime);
+        SetMoveRightPrompt(false);
+        StartCoroutine(PlayFinishingBlowSequence());
+    }
+
+    private IEnumerator PlayFinishingBlowSequence()
+    {
+        float originalTimeScale = Time.timeScale;
+        Vector3 originalCameraPosition = stageCamera != null
+            ? stageCamera.transform.position
+            : Vector3.zero;
+        float originalCameraSize = stageCamera != null && stageCamera.orthographic
+            ? stageCamera.orthographicSize
+            : 0f;
+        float originalFieldOfView = stageCamera != null
+            ? stageCamera.fieldOfView
+            : 0f;
+
+        Time.timeScale = finishingSlowScale;
+        yield return AnimateFinishingCamera(
+            originalCameraPosition,
+            originalCameraSize,
+            originalFieldOfView,
+            true,
+            finishingZoomInDuration);
+
+        float holdDuration = Mathf.Max(
+            0f,
+            finishingSlowDuration - finishingZoomInDuration - finishingZoomOutDuration);
+        if (holdDuration > 0f)
+            yield return new WaitForSecondsRealtime(holdDuration);
+
+        yield return AnimateFinishingCamera(
+            originalCameraPosition,
+            originalCameraSize,
+            originalFieldOfView,
+            false,
+            finishingZoomOutDuration);
+
+        Time.timeScale = originalTimeScale;
+        announcementController.PlayClear(FinalizeStageClear);
+    }
+
+    private IEnumerator AnimateFinishingCamera(
+        Vector3 originalPosition,
+        float originalSize,
+        float originalFieldOfView,
+        bool zoomIn,
+        float duration)
+    {
+        if (stageCamera == null) yield break;
+
+        Vector3 startPosition = stageCamera.transform.position;
+        float startSize = stageCamera.orthographicSize;
+        float startFieldOfView = stageCamera.fieldOfView;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
+            Vector3 focusPosition = originalPosition;
+            if (player != null)
+            {
+                focusPosition = Vector3.Lerp(
+                    originalPosition,
+                    new Vector3(
+                        player.transform.position.x,
+                        player.transform.position.y,
+                        originalPosition.z),
+                    finishingCameraFocus);
+            }
+
+            Vector3 targetPosition = zoomIn ? focusPosition : originalPosition;
+            stageCamera.transform.position = Vector3.Lerp(startPosition, targetPosition, t);
+            if (stageCamera.orthographic)
+            {
+                float targetSize = zoomIn
+                    ? originalSize * finishingZoomMultiplier
+                    : originalSize;
+                stageCamera.orthographicSize = Mathf.Lerp(startSize, targetSize, t);
+            }
+            else
+            {
+                float targetFieldOfView = zoomIn
+                    ? originalFieldOfView * finishingZoomMultiplier
+                    : originalFieldOfView;
+                stageCamera.fieldOfView = Mathf.Lerp(startFieldOfView, targetFieldOfView, t);
+            }
+            yield return null;
+        }
+
+        if (!zoomIn)
+        {
+            stageCamera.transform.position = originalPosition;
+            if (stageCamera.orthographic) stageCamera.orthographicSize = originalSize;
+            else stageCamera.fieldOfView = originalFieldOfView;
+        }
+    }
+
+    private void FinalizeStageClear()
+    {
+        isStageCleared = true;
+        if (resultPanel != null)
+        {
+            resultPanel.SetActive(true);
+        }
+
+        if (clearRewardGranted) return;
+
+        int reward = targetStage != null
+            ? Mathf.Max(0, targetStage.clearStoneReward)
+            : 0;
+        PlayerStoneWallet.Add(reward);
+        // 旧バージョンで保存された一時報酬値は今後使用しない
+        PlayerPrefs.DeleteKey("PendingStageStoneReward");
+        PlayerPrefs.Save();
+        clearRewardGranted = true;
+
+        if (resultController != null)
+        {
+            float clearTime = completedClearTime;
+            float remainingHealthRatio = CalculatePartyHealthRatio();
+            string evaluation = EvaluateClearRank(remainingHealthRatio);
+            resultController.Show(
+                totalDefeatedEnemyCount,
+                totalDamageDealt,
+                reward,
+                clearTime,
+                evaluation,
+                remainingHealthRatio);
+        }
+
+        if (debugLogs)
+        {
+            Debug.Log($"[Stage] クリア報酬として石を{reward}個獲得しました。");
+        }
+    }
+
+    private float CalculatePartyHealthRatio()
+    {
+        GameCharacterManager characterManager =
+            FindFirstObjectByType<GameCharacterManager>();
+        if (characterManager == null) return 0f;
+
+        long currentHealth = 0;
+        long maxHealth = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            int slotMaxHealth = Mathf.Max(0, characterManager.GetCharacterMaxHp(i));
+            if (slotMaxHealth <= 0) continue;
+            maxHealth += slotMaxHealth;
+            currentHealth += Mathf.Clamp(
+                characterManager.GetCharacterCurrentHp(i),
+                0,
+                slotMaxHealth);
+        }
+        return maxHealth > 0
+            ? Mathf.Clamp01((float)currentHealth / maxHealth)
+            : 0f;
+    }
+
+    private string EvaluateClearRank(float healthRatio)
+    {
+        float sThreshold = Mathf.Clamp01(sRankHealthRatio);
+        float aThreshold = Mathf.Min(sThreshold, Mathf.Clamp01(aRankHealthRatio));
+        if (healthRatio >= sThreshold) return "S";
+        if (healthRatio >= aThreshold) return "A";
+        return "B";
+    }
+
+    private void OnValidate()
+    {
+        sRankHealthRatio = Mathf.Clamp01(sRankHealthRatio);
+        aRankHealthRatio = Mathf.Clamp(aRankHealthRatio, 0f, sRankHealthRatio);
     }
 
     public void SetSubStage(int subStageIdx)
@@ -198,12 +520,177 @@ public class NewStageManager : MonoBehaviour
         spawnedEnemyCount = 0;
         defeatedEnemyCount = 0;
         isSubStageCleared = false;
+        if (comboDisplay != null)
+            comboDisplay.ResetCombo();
+        SetMoveRightPrompt(false);
         timer = 0f;
+        BuildSpawnQueue(info);
         SetNextSpawnTime(info);
 
         foreach (var enemy in GameObject.FindGameObjectsWithTag("Enemy"))
         {
             Destroy(enemy);
+        }
+    }
+
+    private void KeepPlayerInsideScreen()
+    {
+        if (player == null || stageCamera == null || isStageCleared)
+        {
+            return;
+        }
+
+        Vector3 worldPosition = player.transform.position;
+        Vector3 viewportPosition =
+            stageCamera.WorldToViewportPoint(worldPosition);
+        if (viewportPosition.z <= 0f)
+        {
+            return;
+        }
+        Vector3 originalViewportPosition = viewportPosition;
+
+        float horizontalPadding = screenEdgePadding;
+        float verticalPadding = screenEdgePadding;
+        Bounds playerBounds = default;
+        bool hasPlayerBounds = false;
+        if (playerSolidCollider != null && playerSolidCollider.enabled)
+        {
+            playerBounds = playerSolidCollider.bounds;
+            hasPlayerBounds = true;
+        }
+        else if (playerSpriteRenderer != null)
+        {
+            playerBounds = playerSpriteRenderer.bounds;
+            hasPlayerBounds = true;
+        }
+
+        if (hasPlayerBounds)
+        {
+            Vector3 rightPoint = stageCamera.WorldToViewportPoint(
+                worldPosition + Vector3.right * playerBounds.extents.x);
+            Vector3 topPoint = stageCamera.WorldToViewportPoint(
+                worldPosition + Vector3.up * playerBounds.extents.y);
+            horizontalPadding +=
+                Mathf.Abs(rightPoint.x - viewportPosition.x);
+            verticalPadding +=
+                Mathf.Abs(topPoint.y - viewportPosition.y);
+        }
+
+        viewportPosition.x = Mathf.Max(
+            horizontalPadding,
+            viewportPosition.x);
+
+        // サブステージクリア後だけ右側の画面外へ移動可能にする
+        if (!isSubStageCleared)
+        {
+            viewportPosition.x = Mathf.Min(
+                1f - horizontalPadding,
+                viewportPosition.x);
+        }
+
+        viewportPosition.y = Mathf.Clamp(
+            viewportPosition.y,
+            verticalPadding,
+            1f - verticalPadding);
+
+        // 範囲内ならRigidbody2Dへ触らない。
+        // 毎フレーム書き戻すとDashのMovePositionを打ち消してしまう。
+        if (Mathf.Approximately(
+                viewportPosition.x,
+                originalViewportPosition.x) &&
+            Mathf.Approximately(
+                viewportPosition.y,
+                originalViewportPosition.y))
+        {
+            return;
+        }
+
+        Vector3 clampedWorldPosition =
+            stageCamera.ViewportToWorldPoint(viewportPosition);
+        clampedWorldPosition.z = worldPosition.z;
+
+        if (playerBody != null)
+        {
+            playerBody.position = clampedWorldPosition;
+        }
+        else
+        {
+            player.transform.position = clampedWorldPosition;
+        }
+    }
+
+    private void SetMoveRightPrompt(bool visible)
+    {
+        if (moveRightPrompt != null &&
+            moveRightPrompt.activeSelf != visible)
+        {
+            moveRightPrompt.SetActive(visible);
+        }
+    }
+
+    private static Collider2D FindSolidPlayerCollider(GameObject target)
+    {
+        foreach (Collider2D collider in target.GetComponents<Collider2D>())
+        {
+            if (collider.enabled && !collider.isTrigger)
+            {
+                return collider;
+            }
+        }
+        return null;
+    }
+
+    private void BuildSpawnQueue(SubStageInfo info)
+    {
+        currentSpawnQueue.Clear();
+
+        if (info.enemySpawnSettings != null &&
+            info.enemySpawnSettings.Length > 0)
+        {
+            foreach (EnemySpawnSetting setting in info.enemySpawnSettings)
+            {
+                if (setting == null)
+                {
+                    continue;
+                }
+
+                if (setting.enemyPrefab == null)
+                {
+                    Debug.LogWarning(
+                        $"{info.subStageName}: Enemy Spawn SettingsにPrefab未設定の項目があります。");
+                    continue;
+                }
+
+                int count = Mathf.Max(0, setting.spawnCount);
+                for (int i = 0; i < count; i++)
+                {
+                    currentSpawnQueue.Add(setting.enemyPrefab);
+                }
+            }
+        }
+
+        if (currentSpawnQueue.Count == 0 && info.enemyPrefab != null)
+        {
+            int legacyCount = Mathf.Max(1, info.targetDefeatCount);
+            for (int i = 0; i < legacyCount; i++)
+            {
+                currentSpawnQueue.Add(info.enemyPrefab);
+            }
+        }
+
+        if (currentSpawnQueue.Count == 0)
+        {
+            Debug.LogError(
+                $"{info.subStageName}: 出現可能な敵Prefabが1つも設定されていません。");
+        }
+
+        // 登録順に偏らないよう、サブステージ開始時に出現順を混ぜる
+        for (int i = currentSpawnQueue.Count - 1; i > 0; i--)
+        {
+            int swapIndex = Random.Range(0, i + 1);
+            GameObject temp = currentSpawnQueue[i];
+            currentSpawnQueue[i] = currentSpawnQueue[swapIndex];
+            currentSpawnQueue[swapIndex] = temp;
         }
     }
 }

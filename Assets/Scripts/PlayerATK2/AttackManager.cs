@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
@@ -17,28 +18,26 @@ public class AttackManager : MonoBehaviour
     
     // クールタイム管理（攻撃データごとに残り時間を記録）
     private Dictionary<AttackData, float> cooldownTimers = new Dictionary<AttackData, float>();
+
+    // 多段攻撃は最後の一撃までクールタイムが始まらないため、実行中を別に管理する
+    private readonly HashSet<AttackData> attacksInProgress = new HashSet<AttackData>();
     
     // プレイヤーの向き情報
-    private IPlayerDirection playerDirection;
+    private IPlayerAttack playerAttack;
+    private readonly List<Collider2D> dashDisabledColliders =
+        new List<Collider2D>();
+    private readonly List<Behaviour> dashDisabledMovement =
+        new List<Behaviour>();
     
-    void Awake()
+    private void Awake()
     {
         if (playerTransform == null)
         {
             playerTransform = transform;
         }
         
-        // プレイヤーの向き情報を取得
-        playerDirection = GetComponent<IPlayerDirection>();
-        if (playerDirection == null)
-        {
-            // IPlayerAttackインターフェースも試す（互換性のため）
-            var playerAttack = GetComponent<IPlayerAttack>();
-            if (playerAttack != null)
-            {
-                playerDirection = new PlayerAttackAdapter(playerAttack);
-            }
-        }
+        // 既存の移動スクリプトが公開する向き情報を利用
+        playerAttack = GetComponent<IPlayerAttack>();
         
         // 全ての攻撃のクールタイマーを初期化
         foreach (var attack in availableAttacks)
@@ -56,6 +55,11 @@ public class AttackManager : MonoBehaviour
     /// </summary>
     public void SetAvailableAttacks(List<AttackData> newAttacks)
     {
+        // キャラクター交代前の多段攻撃を残さない
+        RestoreDashState();
+        StopAllCoroutines();
+        attacksInProgress.Clear();
+
         availableAttacks = newAttacks ?? new List<AttackData>();
         cooldownTimers.Clear();
 
@@ -68,7 +72,7 @@ public class AttackManager : MonoBehaviour
         }
     }
     
-    void Update()
+    private void Update()
     {
         // クールタイムを減らす
         var keys = new List<AttackData>(cooldownTimers.Keys);
@@ -76,7 +80,7 @@ public class AttackManager : MonoBehaviour
         {
             if (cooldownTimers[attack] > 0f)
             {
-                cooldownTimers[attack] -= Time.deltaTime;
+                cooldownTimers[attack] = Mathf.Max(0f, cooldownTimers[attack] - Time.deltaTime);
             }
         }
     }
@@ -85,39 +89,219 @@ public class AttackManager : MonoBehaviour
     /// 指定した攻撃を実行
     /// </summary>
     /// <param name="attackIndex">攻撃のインデックス（availableAttacksリストの番号）</param>
-    public void ExecuteAttack(int attackIndex)
+    public bool ExecuteAttack(int attackIndex)
     {
         if (attackIndex < 0 || attackIndex >= availableAttacks.Count)
         {
             Debug.LogWarning($"無効な攻撃インデックス: {attackIndex}");
-            return;
+            return false;
         }
         
-        ExecuteAttack(availableAttacks[attackIndex]);
+        return ExecuteAttack(availableAttacks[attackIndex]);
     }
     
     /// <summary>
     /// 指定した攻撃データで攻撃を実行
     /// </summary>
-    public void ExecuteAttack(AttackData attackData)
+    public bool ExecuteAttack(AttackData attackData)
     {
         if (attackData == null)
         {
             Debug.LogWarning("攻撃データがnullです");
-            return;
+            return false;
         }
         
-        // クールタイム中かチェック
-        if (IsOnCooldown(attackData))
+        if (IsOnCooldown(attackData) || attacksInProgress.Contains(attackData))
         {
             Debug.Log($"{attackData.attackName} はクールタイム中です");
-            return;
+            return false;
         }
-        
-        // 攻撃を生成
-        SpawnAttack(attackData);
-        
-        // クールタイム開始
+
+        if (attackData.attackType == AttackData.AttackType.Charge)
+        {
+            // チャージ攻撃はボタンを離した時に ExecuteChargedAttack から実行する
+            return false;
+        }
+
+        if (attackData.attackType == AttackData.AttackType.MultiHit)
+        {
+            StartCoroutine(ExecuteMultiHit(attackData));
+        }
+        else if (attackData.attackType == AttackData.AttackType.Dash)
+        {
+            StartCoroutine(ExecuteDash(attackData));
+        }
+        else
+        {
+            SpawnAttack(attackData, attackData.damage, attackData.scale);
+            StartCooldown(attackData);
+        }
+
+        PlayCharacterAttackAnimation();
+
+        return true;
+    }
+
+    private IEnumerator ExecuteDash(AttackData attackData)
+    {
+        attacksInProgress.Add(attackData);
+        bool facingRight = IsFacingRight();
+        float directionSign =
+            attackData.followPlayerDirection && !facingRight ? -1f : 1f;
+        float duration = Mathf.Max(0.01f, attackData.dashDuration);
+
+        GameObject dashHitBox = SpawnAttack(
+            attackData,
+            attackData.damage,
+            attackData.scale,
+            facingRight,
+            duration);
+        if (dashHitBox != null)
+        {
+            dashHitBox.transform.SetParent(playerTransform, true);
+        }
+
+        PlayerHP playerHP = playerTransform.GetComponent<PlayerHP>();
+        if (attackData.invincibleDuringDash && playerHP != null)
+        {
+            playerHP.SetTemporaryInvincibility(duration + 0.05f);
+        }
+
+        BeginDashState();
+
+        Rigidbody2D playerBody =
+            playerTransform.GetComponent<Rigidbody2D>();
+        Vector2 startPosition = playerBody != null
+            ? playerBody.position
+            : (Vector2)playerTransform.position;
+        Vector2 endPosition = startPosition +
+            Vector2.right * directionSign * attackData.dashDistance;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.fixedDeltaTime;
+            Vector2 nextPosition = Vector2.Lerp(
+                startPosition,
+                endPosition,
+                Mathf.Clamp01(elapsed / duration));
+            if (playerBody != null)
+            {
+                playerBody.MovePosition(nextPosition);
+            }
+            else
+            {
+                playerTransform.position = new Vector3(
+                    nextPosition.x,
+                    nextPosition.y,
+                    playerTransform.position.z);
+            }
+            yield return new WaitForFixedUpdate();
+        }
+
+        RestoreDashState();
+        attacksInProgress.Remove(attackData);
+        StartCooldown(attackData);
+    }
+
+    private void BeginDashState()
+    {
+        RestoreDashState();
+
+        foreach (Collider2D collider in
+            playerTransform.GetComponents<Collider2D>())
+        {
+            if (collider.enabled && !collider.isTrigger)
+            {
+                collider.enabled = false;
+                dashDisabledColliders.Add(collider);
+            }
+        }
+
+        TouchMove2 touchMove =
+            playerTransform.GetComponent<TouchMove2>();
+        if (touchMove != null && touchMove.enabled)
+        {
+            touchMove.enabled = false;
+            dashDisabledMovement.Add(touchMove);
+        }
+
+        WASDMoveDebug debugMove =
+            playerTransform.GetComponent<WASDMoveDebug>();
+        if (debugMove != null && debugMove.enabled)
+        {
+            debugMove.enabled = false;
+            dashDisabledMovement.Add(debugMove);
+        }
+    }
+
+    private void RestoreDashState()
+    {
+        foreach (Collider2D collider in dashDisabledColliders)
+        {
+            if (collider != null)
+            {
+                collider.enabled = true;
+            }
+        }
+        dashDisabledColliders.Clear();
+
+        foreach (Behaviour movement in dashDisabledMovement)
+        {
+            if (movement != null)
+            {
+                movement.enabled = true;
+            }
+        }
+        dashDisabledMovement.Clear();
+    }
+
+    private void OnDisable()
+    {
+        RestoreDashState();
+    }
+
+    /// <summary>
+    /// チャージ時間から威力を計算して攻撃する。
+    /// </summary>
+    public bool ExecuteChargedAttack(AttackData attackData, float chargeTime)
+    {
+        if (attackData == null || IsOnCooldown(attackData) || attacksInProgress.Contains(attackData))
+        {
+            return false;
+        }
+
+        float maxTime = Mathf.Max(0.01f, attackData.maxChargeTime);
+        float ratio = Mathf.Clamp01(chargeTime / maxTime);
+        int damage = Mathf.RoundToInt(Mathf.Lerp(attackData.minDamage, attackData.maxDamage, ratio));
+        float scale = attackData.scale *
+            Mathf.Lerp(attackData.minScale, attackData.maxScale, ratio);
+
+        SpawnAttack(attackData, damage, scale);
+        StartCooldown(attackData);
+        PlayCharacterAttackAnimation();
+        return true;
+    }
+
+    private IEnumerator ExecuteMultiHit(AttackData attackData)
+    {
+        attacksInProgress.Add(attackData);
+        bool initialFacingRight = IsFacingRight();
+
+        int hitCount = Mathf.Max(1, attackData.hitCount);
+        for (int i = 0; i < hitCount; i++)
+        {
+            bool? fixedDirection = attackData.updateDirectionEachHit
+                ? null
+                : initialFacingRight;
+            SpawnAttack(attackData, attackData.damage, attackData.scale, fixedDirection);
+            if (i < hitCount - 1)
+            {
+                yield return new WaitForSeconds(Mathf.Max(0f, attackData.hitInterval));
+            }
+        }
+
+        attacksInProgress.Remove(attackData);
         StartCooldown(attackData);
     }
     
@@ -126,6 +310,11 @@ public class AttackManager : MonoBehaviour
     /// </summary>
     public bool IsOnCooldown(AttackData attackData)
     {
+        if (attackData == null)
+        {
+            return false;
+        }
+
         if (!cooldownTimers.ContainsKey(attackData))
         {
             cooldownTimers[attackData] = 0f;
@@ -164,41 +353,52 @@ public class AttackManager : MonoBehaviour
     /// </summary>
     public void StartCooldown(AttackData attackData)
     {
-        cooldownTimers[attackData] = attackData.cooldownTime;
+        if (attackData != null)
+        {
+            cooldownTimers[attackData] = Mathf.Max(0f, attackData.cooldownTime);
+        }
     }
     
     /// <summary>
     /// 攻撃を生成
     /// </summary>
-    private void SpawnAttack(AttackData attackData)
+    private GameObject SpawnAttack(
+        AttackData attackData,
+        int damage,
+        float scale,
+        bool? facingRightOverride = null,
+        float? lifetimeOverride = null)
     {
         if (attackData.hitBoxPrefab == null)
         {
             Debug.LogWarning($"{attackData.attackName} のヒットボックスPrefabが設定されていません");
-            return;
+            return null;
         }
         
         // プレイヤーの向きを取得
-        bool isFacingRight = playerDirection != null ? playerDirection.IsFacingRight : true;
+        bool isFacingRight = facingRightOverride ?? IsFacingRight();
         
         // 生成位置を計算
+        float directionSign = attackData.followPlayerDirection && !isFacingRight ? -1f : 1f;
         Vector3 spawnPosition = playerTransform.position;
-        if (attackData.followPlayerDirection && attackData.spawnDistance > 0f)
-        {
-            Vector3 direction = isFacingRight ? Vector3.right : Vector3.left;
-            spawnPosition += direction * attackData.spawnDistance;
-        }
+        spawnPosition.x += directionSign * (attackData.spawnDistance + attackData.spawnOffset.x);
+        spawnPosition.y += attackData.spawnOffset.y;
         
         // ヒットボックスを生成
-        GameObject hitBoxObj = Instantiate(attackData.hitBoxPrefab, spawnPosition, Quaternion.identity);
+        GameObject hitBoxObj = Instantiate(
+            attackData.hitBoxPrefab,
+            spawnPosition,
+            Quaternion.Euler(0f, 0f, attackData.rotationZ * directionSign));
         
         // スケール設定
-        if (attackData.scale != 1.0f)
-        {
-            hitBoxObj.transform.localScale = Vector3.one * attackData.scale;
-        }
+        hitBoxObj.transform.localScale = new Vector3(
+            Mathf.Max(0f, scale * attackData.scaleAxes.x),
+            Mathf.Max(0f, scale * attackData.scaleAxes.y),
+            1f);
         // 左向きならX反転（必要な場合）
-        if (attackData.flipOnDirection && !isFacingRight)
+        if (attackData.followPlayerDirection &&
+            attackData.flipOnDirection &&
+            !isFacingRight)
         {
             var ls = hitBoxObj.transform.localScale;
             ls.x = -Mathf.Abs(ls.x);
@@ -209,27 +409,52 @@ public class AttackManager : MonoBehaviour
         HitBox hitBox = hitBoxObj.GetComponent<HitBox>();
         if (hitBox != null)
         {
-            hitBox.SetDamage(attackData.damage);
+            hitBox.Configure(
+                Mathf.Max(0, damage),
+                playerTransform.position,
+                new Vector2(directionSign, 0f),
+                attackData.knockbackDistance,
+                attackData.knockbackDuration,
+                attackData.attackType == AttackData.AttackType.Projectile &&
+                    attackData.destroyProjectileOnHit);
+        }
+
+        if (attackData.attackType == AttackData.AttackType.Projectile)
+        {
+            ProjectileMovement projectile =
+                hitBoxObj.GetComponent<ProjectileMovement>();
+            if (projectile == null)
+            {
+                projectile = hitBoxObj.AddComponent<ProjectileMovement>();
+            }
+            projectile.Initialize(
+                new Vector2(directionSign, 0f),
+                attackData.projectileSpeed,
+                attackData.destroyProjectileOffScreen,
+                attackData.offScreenMargin);
         }
         
-        // 持続時間後に削除
-        Destroy(hitBoxObj, attackData.duration);
+        float lifetime = lifetimeOverride ??
+            (attackData.attackType == AttackData.AttackType.Projectile
+                ? Mathf.Max(0.01f, attackData.projectileLifetime)
+                : Mathf.Max(0f, attackData.duration));
+        Destroy(hitBoxObj, lifetime);
         
-        Debug.Log($"{attackData.attackName} を実行 (ダメージ: {attackData.damage})");
+        Debug.Log($"{attackData.attackName} を実行 (ダメージ: {damage})");
+        return hitBoxObj;
     }
     
-    /// <summary>
-    /// IPlayerAttackをIPlayerDirectionに変換するアダプター
-    /// </summary>
-    private class PlayerAttackAdapter : IPlayerDirection
+    private bool IsFacingRight()
     {
-        private IPlayerAttack playerAttack;
-        
-        public PlayerAttackAdapter(IPlayerAttack playerAttack)
-        {
-            this.playerAttack = playerAttack;
-        }
-        
-        public bool IsFacingRight => playerAttack.isRight;
+        return playerAttack == null || playerAttack.isRight;
+    }
+
+    private void PlayCharacterAttackAnimation()
+    {
+        if (playerTransform == null) return;
+        PlayerCharacterSpriteAnimator spriteAnimator =
+            playerTransform.GetComponentInChildren<PlayerCharacterSpriteAnimator>(true);
+        if (spriteAnimator != null)
+            spriteAnimator.PlayAttack();
     }
 }

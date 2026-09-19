@@ -4,6 +4,7 @@ public class PanelManager : MonoBehaviour
 {
     public GameObject targetPanel; // Inspectorで表示/非表示したいパネルをアサイン
     [SerializeField] private bool keepCurrentStateOnStart;
+    [SerializeField] private bool restorePreparationPanelState;
 
     private static readonly System.Collections.Generic.List<GameObject> registeredPanels = new System.Collections.Generic.List<GameObject>();
 
@@ -15,6 +16,14 @@ public class PanelManager : MonoBehaviour
 
     void Start()
     {
+        if (targetPanel != null && restorePreparationPanelState)
+        {
+            targetPanel.SetActive(
+                HomeScenePanelState.HasSavedState &&
+                HomeScenePanelState.IsPreparationPanelActive);
+            return;
+        }
+
         if (targetPanel != null && !keepCurrentStateOnStart)
             targetPanel.SetActive(false); // 初期状態ではパネルを非表示にする
     }

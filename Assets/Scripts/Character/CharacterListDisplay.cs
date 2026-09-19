@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 
 /// <summary>
 /// CharacterSceneでキャラクター一覧をScroll Viewに表示
@@ -12,6 +13,21 @@ public class CharacterListDisplay : MonoBehaviour
     [SerializeField] private bool autoAddGridLayout = true; // グリッドレイアウト自動付与
     [SerializeField] private int columnCount = 6; // 6列固定
     [SerializeField] private float cellSize = 150f; // 正方形セルサイズ
+
+    [Header("表示するキャラクター")]
+    [Tooltip("ONの場合、下のDisplay Charactersに登録したキャラクターを登録順で表示します")]
+    [SerializeField] private bool useInspectorDisplayList;
+
+    [Tooltip("CharacterSceneへ表示するキャラクターと並び順。空の場合は獲得済み全キャラクターを表示します")]
+    [SerializeField] private List<CharacterData> displayCharacters =
+        new List<CharacterData>();
+
+    [Tooltip("ONの場合、Display Charactersに登録されていても未獲得キャラクターは表示しません")]
+    [SerializeField] private bool showOwnedCharactersOnly = true;
+
+    [Header("Text Size")]
+    [Min(12f)] [SerializeField] private float characterNameFontSize = 24f;
+    [Min(10f)] [SerializeField] private float characterNameMinimumFontSize = 16f;
     
     void Start()
     {
@@ -34,16 +50,7 @@ public class CharacterListDisplay : MonoBehaviour
         Debug.Log("DisplayCharacters() 開始");
         
         // CharacterDatabase確認（複数の方法で検索）
-        CharacterDatabase db = CharacterDatabase.Instance;
-        if (db == null)
-        {
-            // Instance が null の場合、シーン内を検索
-            db = FindObjectOfType<CharacterDatabase>();
-            if (db != null)
-            {
-                Debug.LogWarning("CharacterDatabase.Instance が null でしたが、FindObjectOfType で見つかりました。");
-            }
-        }
+        CharacterDatabase db = CharacterDatabase.GetOrCreate();
         
         if (db == null)
         {
@@ -76,16 +83,26 @@ public class CharacterListDisplay : MonoBehaviour
         }
         
         // キャラクター分だけUIアイテムを生成
-        int count = db.GetCharacterCount();
+        CharacterSceneController sceneController = FindFirstObjectByType<CharacterSceneController>();
+        if (sceneController != null && sceneController.IsFormationSelectionMode)
+        {
+            CreateClearSelectionItem(sceneController);
+        }
+
+        List<CharacterData> charactersToDisplay =
+            BuildDisplayCharacterList(db);
+        int count = charactersToDisplay.Count;
         if (count == 0)
         {
-            Debug.LogWarning("CharacterDatabaseにキャラクターが登録されていません！");
+            Debug.LogWarning(
+                "CharacterSceneに表示できるキャラクターがいません。" +
+                "Display Charactersと獲得状態を確認してください。");
             return;
         }
         
         for (int i = 0; i < count; i++)
         {
-            CharacterData character = db.GetCharacter(i);
+            CharacterData character = charactersToDisplay[i];
             if (character == null)
             {
                 Debug.LogWarning($"CharacterData[{i}] が null です");
@@ -102,10 +119,65 @@ public class CharacterListDisplay : MonoBehaviour
             if (item != null)
             {
                 item.Setup(character);
+                if (sceneController != null)
+                {
+                    item.SetSelectionHandler(sceneController.ShowCharacter);
+                }
             }
         }
         
         Debug.Log($"DisplayCharacters() 完了。{count}体のキャラクターを表示しました。");
+    }
+
+    private List<CharacterData> BuildDisplayCharacterList(
+        CharacterDatabase database)
+    {
+        List<CharacterData> result = new List<CharacterData>();
+        HashSet<int> addedIds = new HashSet<int>();
+
+        bool useInspectorList = useInspectorDisplayList &&
+            displayCharacters != null &&
+            displayCharacters.Count > 0;
+
+        if (useInspectorList)
+        {
+            foreach (CharacterData character in displayCharacters)
+            {
+                if (character == null ||
+                    !addedIds.Add(character.characterId))
+                {
+                    continue;
+                }
+
+                if (showOwnedCharactersOnly &&
+                    !database.IsOwned(character.characterId))
+                {
+                    continue;
+                }
+
+                result.Add(character);
+            }
+            return result;
+        }
+
+        for (int i = 0; i < database.GetCharacterCount(); i++)
+        {
+            CharacterData character = database.GetCharacter(i);
+            if (character != null && addedIds.Add(character.characterId))
+            {
+                result.Add(character);
+            }
+        }
+        return result;
+    }
+
+    [ContextMenu("キャラクター一覧を再表示")]
+    public void RefreshDisplay()
+    {
+        if (isActiveAndEnabled && contentPanel != null)
+        {
+            DisplayCharacters();
+        }
     }
     
     void EnsureGridLayout()
@@ -227,8 +299,12 @@ public class CharacterListDisplay : MonoBehaviour
         nameRect.sizeDelta = new Vector2(cellSize - 10, 40);
 
         TextMeshProUGUI nameText = nameObj.AddComponent<TextMeshProUGUI>();
+        JapaneseFontProvider.Apply(nameText);
         nameText.text = character.characterName;
-        nameText.fontSize = 12;
+        nameText.fontSize = characterNameFontSize;
+        nameText.enableAutoSizing = true;
+        nameText.fontSizeMin = Mathf.Min(characterNameMinimumFontSize, characterNameFontSize);
+        nameText.fontSizeMax = characterNameFontSize;
         nameText.color = Color.black;
         nameText.alignment = TextAlignmentOptions.Center;
         nameText.overflowMode = TextOverflowModes.Truncate;
@@ -254,5 +330,60 @@ public class CharacterListDisplay : MonoBehaviour
         listItem.selectButton = button;
 
         return itemObj;
+    }
+
+    private void CreateClearSelectionItem(CharacterSceneController sceneController)
+    {
+        bool canClear = sceneController.CanClearCurrentFormationSlot;
+        GameObject item = new GameObject("ClearSelection");
+        item.transform.SetParent(contentPanel, false);
+
+        RectTransform rect = item.AddComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(cellSize, cellSize + 50f);
+        LayoutElement layout = item.AddComponent<LayoutElement>();
+        layout.preferredWidth = cellSize;
+        layout.preferredHeight = cellSize + 50f;
+
+        Image background = item.AddComponent<Image>();
+        background.color = canClear
+            ? new Color(0.88f, 0.32f, 0.32f, 1f)
+            : new Color(0.45f, 0.45f, 0.45f, 1f);
+
+        GameObject symbolObject = new GameObject("ClearSymbol");
+        symbolObject.transform.SetParent(item.transform, false);
+        RectTransform symbolRect = symbolObject.AddComponent<RectTransform>();
+        symbolRect.anchorMin = new Vector2(0f, 0.2f);
+        symbolRect.anchorMax = Vector2.one;
+        symbolRect.offsetMin = symbolRect.offsetMax = Vector2.zero;
+        TextMeshProUGUI symbol = symbolObject.AddComponent<TextMeshProUGUI>();
+        JapaneseFontProvider.Apply(symbol);
+        symbol.text = "×";
+        symbol.fontSize = Mathf.Max(48f, characterNameFontSize * 2f);
+        symbol.color = Color.white;
+        symbol.alignment = TextAlignmentOptions.Center;
+        symbol.raycastTarget = false;
+
+        GameObject labelObject = new GameObject("Label");
+        labelObject.transform.SetParent(item.transform, false);
+        RectTransform labelRect = labelObject.AddComponent<RectTransform>();
+        labelRect.anchorMin = Vector2.zero;
+        labelRect.anchorMax = new Vector2(1f, 0.25f);
+        labelRect.offsetMin = labelRect.offsetMax = Vector2.zero;
+        TextMeshProUGUI label = labelObject.AddComponent<TextMeshProUGUI>();
+        JapaneseFontProvider.Apply(label);
+        label.text = canClear ? "選択解除" : "解除不可";
+        label.fontSize = characterNameFontSize;
+        label.enableAutoSizing = true;
+        label.fontSizeMin = characterNameMinimumFontSize;
+        label.fontSizeMax = characterNameFontSize;
+        label.color = Color.white;
+        label.alignment = TextAlignmentOptions.Center;
+        label.raycastTarget = false;
+
+        Button button = item.AddComponent<Button>();
+        button.targetGraphic = background;
+        button.interactable = canClear;
+        if (canClear)
+            button.onClick.AddListener(sceneController.ClearCurrentFormationSlot);
     }
 }
